@@ -479,7 +479,7 @@ bool RenderDevice::InitGraphicsAPI()
 #if !RETRO_USE_ORIGINAL_CODE
     int32 screenWidth = 0;
 #endif
-    for (int32 s = 0; s < 4; ++s) {
+    for (int32 s = 0; s < SCREEN_COUNT; ++s) {
         if (videoSettings.pixHeight > maxPixHeight)
             maxPixHeight = videoSettings.pixHeight;
 
