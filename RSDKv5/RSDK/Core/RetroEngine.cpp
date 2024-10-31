@@ -1,10 +1,6 @@
-#include "RSDK/Core/RetroEngine.hpp"
+#include "RetroEngine.hpp"
 
 using namespace RSDK;
-
-#if RETRO_REV0U
-#include "Legacy/RetroEngineLegacy.cpp"
-#endif
 
 LogicLinkHandle RSDK::linkGameLogic = NULL;
 
