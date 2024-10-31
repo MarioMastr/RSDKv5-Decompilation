@@ -3,7 +3,7 @@
 
 find_package(PkgConfig REQUIRED)
 
-add_executable(RetroEngine ${RETRO_FILES})
+add_executable(RetroEngine ${RETRO_FILES} ${LEGACY_RETRO_FILES})
 
 set(RETRO_SUBSYSTEM "OGL" CACHE STRING "The subsystem to use")
 option(USE_SDL_AUDIO "Whether or not to use SDL for audio instead of the default MiniAudio." OFF)

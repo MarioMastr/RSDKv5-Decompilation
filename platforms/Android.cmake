@@ -1,4 +1,4 @@
-add_library(RetroEngine SHARED ${RETRO_FILES} dependencies/android/androidHelpers.cpp)
+add_library(RetroEngine SHARED ${RETRO_FILES} ${LEGACY_RETRO_FILES} dependencies/android/androidHelpers.cpp)
 
 set(DEP_PATH android)
 set(RETRO_SUBSYSTEM "OGL")

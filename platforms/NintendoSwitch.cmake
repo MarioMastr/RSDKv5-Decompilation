@@ -1,6 +1,6 @@
 find_package(PkgConfig REQUIRED)
 
-add_executable(RetroEngine ${RETRO_FILES}
+add_executable(RetroEngine ${RETRO_FILES} ${LEGACY_RETRO_FILES}
     dependencies/switch/libnx-dyn/dyn.c
     dependencies/switch/libnx-dyn/dynamic_wrap.c
     dependencies/switch/libnx-dyn/address_space.c
