@@ -1,4 +1,7 @@
+#include "../ObjectLegacy.hpp"
 
+#ifndef PLAYER_LEGACY_V3_H
+#define PLAYER_LEGACY_V3_H
 namespace Legacy
 {
 
@@ -55,8 +58,8 @@ struct Player {
     uint8 gravity;
     uint8 water;
     uint8 flailing[3];
-    AnimationFile *animationFile;
-    Entity *boundEntity;
+    RSDK::Legacy::AnimationFile *animationFile;
+    RSDK::Legacy::v3::Entity *boundEntity;
 };
 
 extern Player playerList[LEGACY_v3_PLAYER_COUNT];
@@ -81,3 +84,5 @@ void ProcessPlayerControl(Player *player);
 } // namespace v3
 
 } // namespace Legacy
+
+#endif // PLAYER_LEGACY_V3_H

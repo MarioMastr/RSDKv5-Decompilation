@@ -1,10 +1,14 @@
+#include "../Input.hpp"
+
+#ifndef KB_INPUT_DEVICE_H
+#define KB_INPUT_DEVICE_H
 
 namespace SKU
 {
 
 extern int32 keyState[PLAYER_COUNT];
 
-struct InputDeviceKeyboard : InputDevice {
+struct InputDeviceKeyboard : RSDK::InputDevice {
     void UpdateInput();
     void ProcessInput(int32 controllerID);
 
@@ -42,3 +46,5 @@ void HandleSpecialKeys();
 #endif
 
 } // namespace SKU
+
+#endif // KB_INPUT_DEVICE_H

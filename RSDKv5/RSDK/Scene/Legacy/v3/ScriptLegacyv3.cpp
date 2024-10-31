@@ -1,3 +1,4 @@
+#include "ScriptLegacyv3.hpp"
 
 RSDK::Legacy::v3::ObjectScript RSDK::Legacy::v3::objectScriptList[LEGACY_v3_OBJECT_COUNT];
 

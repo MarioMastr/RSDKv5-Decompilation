@@ -1,3 +1,5 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
 #ifndef TEXT_H
 #define TEXT_H
 

@@ -1,3 +1,4 @@
+#include "KBInputDevice.hpp"
 
 using namespace RSDK;
 

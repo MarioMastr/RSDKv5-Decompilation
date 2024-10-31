@@ -1,3 +1,4 @@
+#include "Scene3DLegacyv3.hpp"
 
 RSDK::Legacy::Face RSDK::Legacy::v3::faceBuffer[LEGACY_v3_FACEBUFFER_SIZE];
 RSDK::Legacy::Vertex RSDK::Legacy::v3::vertexBuffer[LEGACY_v3_VERTEXBUFFER_SIZE];

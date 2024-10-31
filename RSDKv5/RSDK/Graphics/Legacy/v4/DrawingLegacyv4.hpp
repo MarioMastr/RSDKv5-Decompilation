@@ -1,3 +1,7 @@
+#include "../DrawingLegacy.hpp"
+
+#ifndef DRAWING_LEGACY_V4_H
+#define DRAWING_LEGACY_V4_H
 
 namespace Legacy
 {
@@ -13,3 +17,5 @@ void DrawDebugOverlays();
 } // namespace v4
 
 } // namespace Legacy
+
+#endif // DRAWING_LEGACY_V4_H

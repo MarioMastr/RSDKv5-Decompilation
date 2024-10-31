@@ -1,3 +1,7 @@
+#include "../Animation.hpp"
+
+#ifndef ANIMATION_LEGACY_H
+#define ANIMATION_LEGACY_H
 
 namespace Legacy
 {
@@ -76,3 +80,5 @@ void ProcessObjectAnimation(void *objScr, void *ent);
 }
 
 } // namespace Legacy
+
+#endif // ANIMATION_LEGACY_H

@@ -1,3 +1,5 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
 #ifndef VIDEO_H
 #define VIDEO_H
 

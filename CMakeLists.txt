@@ -53,6 +53,39 @@ set(RETRO_FILES
     dependencies/all/miniz/miniz.c
 )
 
+if(RETRO_REVISION STREQUAL "3")
+    set(LEGACY_RETRO_FILES
+        RSDKv5/RSDK/Audio/Legacy/AudioLegacy.cpp
+        RSDKv5/RSDK/Core/Legacy/RetroEngineLegacy.cpp
+        RSDKv5/RSDK/Core/Legacy/ModAPILegacy.cpp
+        RSDKv5/RSDK/Core/Legacy/v3/RetroEnginev3.cpp
+        RSDKv5/RSDK/Core/Legacy/v4/RetroEnginev4.cpp
+        RSDKv5/RSDK/Graphics/Legacy/DrawingLegacy.cpp
+        RSDKv5/RSDK/Graphics/Legacy/Scene3DLegacy.cpp
+        RSDKv5/RSDK/Graphics/Legacy/AnimationLegacy.cpp
+        RSDKv5/RSDK/Graphics/Legacy/PaletteLegacy.cpp
+        RSDKv5/RSDK/Graphics/Legacy/SpriteLegacy.cpp
+        RSDKv5/RSDK/Graphics/Legacy/v3/DrawingLegacyv3.cpp
+        RSDKv5/RSDK/Graphics/Legacy/v4/DrawingLegacyv4.cpp
+        RSDKv5/RSDK/Graphics/Legacy/v3/Scene3DLegacyv3.cpp
+        RSDKv5/RSDK/Graphics/Legacy/v4/Scene3DLegacyv4.cpp
+        RSDKv5/RSDK/Scene/Legacy/SceneLegacy.cpp
+        RSDKv5/RSDK/Scene/Legacy/ObjectLegacy.cpp
+        RSDKv5/RSDK/Scene/Legacy/v3/ObjectLegacyv3.cpp
+        RSDKv5/RSDK/Scene/Legacy/v3/ScriptLegacyv3.cpp
+        RSDKv5/RSDK/Scene/Legacy/v3/PlayerLegacyv3.cpp
+        RSDKv5/RSDK/Scene/Legacy/v3/CollisionLegacyv3.cpp
+        RSDKv5/RSDK/Scene/Legacy/v3/SceneLegacyv3.cpp
+        RSDKv5/RSDK/Scene/Legacy/v4/SceneLegacyv4.cpp
+        RSDKv5/RSDK/Scene/Legacy/v4/ObjectLegacyv4.cpp
+        RSDKv5/RSDK/Scene/Legacy/v4/ScriptLegacyv4.cpp
+        RSDKv5/RSDK/Scene/Legacy/v4/CollisionLegacyv4.cpp
+        RSDKv5/RSDK/Storage/Legacy/UserStorageLegacy.cpp
+        RSDKv5/RSDK/Storage/Legacy/TextLegacy.cpp
+    )
+
+endif()
+
 if(NOT PLATFORM)
     if(WIN32) # THIS ASSUMES VCPKG OR SOURCES !!!!!!!
         set(PLATFORM "Windows" CACHE STRING "The platform to compile for.")

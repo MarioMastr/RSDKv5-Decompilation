@@ -1,3 +1,4 @@
+#include "SceneLegacyv4.hpp"
 
 #if RETRO_USE_MOD_LOADER
 namespace RSDK

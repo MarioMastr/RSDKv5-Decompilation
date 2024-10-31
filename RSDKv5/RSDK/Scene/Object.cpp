@@ -1,10 +1,6 @@
-#include "RSDK/Core/RetroEngine.hpp"
+#include "Object.hpp"
 
 using namespace RSDK;
-
-#if RETRO_REV0U
-#include "Legacy/ObjectLegacy.cpp"
-#endif
 
 ObjectClass RSDK::objectClassList[OBJECT_COUNT];
 int32 RSDK::objectClassCount = 0;

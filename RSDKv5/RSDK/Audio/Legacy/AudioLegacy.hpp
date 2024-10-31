@@ -1,3 +1,7 @@
+#include "../Audio.hpp"
+
+#ifndef AUDIO_LEGACY_H
+#define AUDIO_LEGACY_H
 
 namespace Legacy
 {
@@ -22,7 +26,7 @@ extern TrackInfo musicTracks[LEGACY_TRACK_COUNT];
 
 void SetMusicTrack(const char *filePath, uint8 trackID, bool32 loop, uint32 loopPoint);
 int32 PlayMusic(int32 trackID);
-inline void StopMusic() { StopChannel(musicChannel); }
+inline void StopMusic() { RSDK::StopChannel(musicChannel); }
 void SetMusicVolume(int32 volume);
 
 // helper func to ensure compatibility with how v3/v4 expects it (no plays var and slot is set manually)
@@ -51,3 +55,5 @@ void SetSfxName(const char *sfxName, int32 sfxID);
 } // namespace v4
 
 } // namespace Legacy
+
+#endif // AUDIO_LEGACY_H

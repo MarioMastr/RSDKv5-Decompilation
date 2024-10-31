@@ -1,3 +1,7 @@
+#include "../Drawing.hpp"
+
+#ifndef DRAWING_LEGACY_H
+#define DRAWING_LEGACY_H
 
 namespace Legacy
 {
@@ -97,3 +101,5 @@ void DrawBlendedTextMenuEntry(void *menu, int32 rowID, int32 XPos, int32 YPos, i
 
 #include "v3/DrawingLegacyv3.hpp"
 #include "v4/DrawingLegacyv4.hpp"
+
+#endif // DRAWING_LEGACY_H

@@ -1,3 +1,5 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
 #ifndef COLLISION_H
 #define COLLISION_H
 
@@ -150,7 +152,8 @@ void RoofCollision(CollisionSensor *sensor);
 void RWallCollision(CollisionSensor *sensor);
 
 #if RETRO_REV0U
-#include "Legacy/CollisionLegacy.hpp"
+#include "Legacy/v3/CollisionLegacyv3.hpp"
+#include "Legacy/v4/CollisionLegacyv4.hpp"
 #endif
 
 } // namespace RSDK

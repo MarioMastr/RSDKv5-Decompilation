@@ -1,3 +1,4 @@
+#include "SDL2InputDevice.hpp"
 
 using namespace RSDK;
 

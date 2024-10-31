@@ -1,3 +1,5 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
 #ifndef DEBUG_H
 #define DEBUG_H
 
@@ -144,6 +146,6 @@ void DevMenu_PlayerSelectMenu();
 void OpenDevMenu();
 void CloseDevMenu();
 
-#endif
-
 } // namespace RSDK
+
+#endif

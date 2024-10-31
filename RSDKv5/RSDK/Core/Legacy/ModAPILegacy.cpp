@@ -1,3 +1,4 @@
+#include "ModAPILegacy.hpp"
 
 #if RETRO_USE_MOD_LOADER
 

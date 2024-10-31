@@ -1,3 +1,6 @@
+#include "SDL2AudioDevice.hpp"
+
+using namespace RSDK;
 
 uint8 AudioDevice::contextInitialized;
 

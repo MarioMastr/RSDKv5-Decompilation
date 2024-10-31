@@ -1,3 +1,4 @@
+#include "PaletteLegacy.hpp"
 
 // Palettes (as RGB565 Colors)
 uint16 RSDK::Legacy::fullPalette[LEGACY_PALETTE_COUNT][LEGACY_PALETTE_COLOR_COUNT];

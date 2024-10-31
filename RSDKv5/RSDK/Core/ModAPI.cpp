@@ -1,12 +1,8 @@
-#include "RSDK/Core/RetroEngine.hpp"
+#include "ModAPI.hpp"
 
 #if RETRO_USE_MOD_LOADER
 
 using namespace RSDK;
-
-#if RETRO_REV0U
-#include "Legacy/ModAPILegacy.cpp"
-#endif
 
 #include <filesystem>
 #include <stdexcept>

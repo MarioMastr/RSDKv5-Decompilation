@@ -1,3 +1,4 @@
+#include "SceneLegacyv3.hpp"
 
 int32 RSDK::Legacy::v3::yScrollA    = 0;
 int32 RSDK::Legacy::v3::yScrollB    = SCREEN_YSIZE;

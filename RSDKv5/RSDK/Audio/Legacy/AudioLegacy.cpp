@@ -1,4 +1,4 @@
-
+#include "AudioLegacy.hpp"
 
 int32 RSDK::Legacy::globalSFXCount = 0;
 int32 RSDK::Legacy::stageSFXCount  = 0;

@@ -1,4 +1,4 @@
-#include "RSDK/Core/RetroEngine.hpp"
+#include "Input.hpp"
 
 using namespace RSDK;
 
@@ -20,10 +20,6 @@ TouchInfo RSDK::touchInfo;
 GamePadMappings *RSDK::gamePadMappings = NULL;
 int32 RSDK::gamePadCount               = 0;
 
-#if RETRO_INPUTDEVICE_KEYBOARD
-#include "Keyboard/KBInputDevice.cpp"
-#endif
-
 #if RETRO_INPUTDEVICE_XINPUT
 #include "XInput/XInputDevice.cpp"
 #endif
@@ -38,10 +34,6 @@ int32 RSDK::gamePadCount               = 0;
 
 #if RETRO_INPUTDEVICE_NX
 #include "NX/NXInputDevice.cpp"
-#endif
-
-#if RETRO_INPUTDEVICE_SDL2
-#include "SDL2/SDL2InputDevice.cpp"
 #endif
 
 #if RETRO_INPUTDEVICE_GLFW

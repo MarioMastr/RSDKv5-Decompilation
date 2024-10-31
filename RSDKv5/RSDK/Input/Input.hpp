@@ -1,3 +1,5 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
 #ifndef INPUT_H
 #define INPUT_H
 

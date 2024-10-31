@@ -1,3 +1,9 @@
+#include "../SceneLegacy.hpp"
+
+using namespace RSDK;
+
+#ifndef SCENE_LEGACY_V4_H
+#define SCENE_LEGACY_V4_H
 
 namespace Legacy
 {
@@ -30,3 +36,5 @@ void SetPlayerScreenPositionStatic(Entity *target);
 } // namespace v4
 
 } // namespace Legacy
+
+#endif // SCENE_LEGACY_V4_H

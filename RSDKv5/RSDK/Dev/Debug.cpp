@@ -1,4 +1,4 @@
-#include "RSDK/Core/RetroEngine.hpp"
+#include "Debug.hpp"
 
 #if RETRO_PLATFORM == RETRO_WIN
 #include <Windows.h>

@@ -1,4 +1,4 @@
-
+#include "UserStorageLegacy.hpp"
 
 void *RSDK::Legacy::nativeFunction[LEGACY_v4_NATIIVEFUNCTION_COUNT];
 int32 RSDK::Legacy::nativeFunctionCount = 0;

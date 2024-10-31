@@ -1,10 +1,6 @@
-#include "RSDK/Core/RetroEngine.hpp"
+#include "Scene3D.hpp"
 
 using namespace RSDK;
-
-#if RETRO_REV0U
-#include "Legacy/Scene3DLegacy.cpp"
-#endif
 
 Model RSDK::modelList[MODEL_COUNT];
 Scene3D RSDK::scene3DList[SCENE3D_COUNT];

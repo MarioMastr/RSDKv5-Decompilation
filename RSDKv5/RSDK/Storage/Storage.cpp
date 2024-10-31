@@ -1,10 +1,6 @@
-#include "RSDK/Core/RetroEngine.hpp"
+#include "Storage.hpp"
 
 using namespace RSDK;
-
-#if RETRO_REV0U
-#include "Legacy/UserStorageLegacy.cpp"
-#endif
 
 // Macro to access the header variables of a block of memory.
 // Note that this is pointless if the pointer is already pointing directly at the header rather than the memory after it.

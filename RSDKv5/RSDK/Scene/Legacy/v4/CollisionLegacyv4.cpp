@@ -1,3 +1,4 @@
+#include "CollisionLegacyv4.hpp"
 
 int32 RSDK::Legacy::v4::collisionLeft   = 0;
 int32 RSDK::Legacy::v4::collisionTop    = 0;

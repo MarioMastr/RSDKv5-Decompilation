@@ -1,3 +1,8 @@
+#include "../Audio.hpp"
+
+#ifndef SDL2_AUDIO_DEVICE_H
+#define SDL2_AUDIO_DEVICE_H
+
 #define LockAudioDevice() SDL_LockAudioDevice(AudioDevice::device)
 #define UnlockAudioDevice() SDL_UnlockAudioDevice(AudioDevice::device)
 
@@ -31,3 +36,5 @@ private:
     static void AudioCallback(void *data, uint8 *stream, int32 len);
 };
 } // namespace RSDK
+
+#endif

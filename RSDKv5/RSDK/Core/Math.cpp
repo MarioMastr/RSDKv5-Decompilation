@@ -1,5 +1,4 @@
-#include "RSDK/Core/RetroEngine.hpp"
-#include <math.h>
+#include "Math.hpp"
 
 using namespace RSDK;
 

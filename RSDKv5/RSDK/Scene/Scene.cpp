@@ -1,10 +1,6 @@
-#include "RSDK/Core/RetroEngine.hpp"
+#include "Scene.hpp"
 
 using namespace RSDK;
-
-#if RETRO_REV0U
-#include "Legacy/SceneLegacy.cpp"
-#endif
 
 uint8 RSDK::tilesetPixels[TILESET_SIZE * 4];
 

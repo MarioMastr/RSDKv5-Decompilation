@@ -1,9 +1,4 @@
-#include "v3/ObjectLegacyv3.cpp"
-#include "v3/PlayerLegacyv3.cpp"
-#include "v3/ScriptLegacyv3.cpp"
-
-#include "v4/ObjectLegacyv4.cpp"
-#include "v4/ScriptLegacyv4.cpp"
+#include "ObjectLegacy.hpp"
 
 int32 RSDK::Legacy::OBJECT_BORDER_X1 = 0x80;
 int32 RSDK::Legacy::OBJECT_BORDER_X2 = Legacy::SCREEN_XSIZE + 0x80;

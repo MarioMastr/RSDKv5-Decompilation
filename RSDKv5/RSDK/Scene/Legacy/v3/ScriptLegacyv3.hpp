@@ -1,3 +1,7 @@
+#include "../ObjectLegacy.hpp"
+
+#ifndef SCRIPT_LEGACY_V3_H
+#define SCRIPT_LEGACY_V3_H
 
 namespace Legacy
 {
@@ -94,3 +98,5 @@ void ClearScriptData();
 } // namespace v3
 
 } // namespace Legacy
+
+#endif // SCRIPT_LEGACY_V3_H

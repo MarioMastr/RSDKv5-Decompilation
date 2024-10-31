@@ -1,3 +1,7 @@
+#include "../ObjectLegacy.hpp"
+
+#ifndef OBJECT_LEGACY_V4_H
+#define OBJECT_LEGACY_V4_H
 
 namespace Legacy
 {
@@ -114,3 +118,5 @@ void ProcessObjectControl(Entity *player);
 } // namespace v4
 
 } // namespace Legacy
+
+#endif // OBJECT_LEGACY_V4_H

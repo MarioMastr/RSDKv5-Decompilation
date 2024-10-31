@@ -1,3 +1,7 @@
+#include "../DrawingLegacy.hpp"
+
+#ifndef DRAWING_LEGACY_V3_H
+#define DRAWING_LEGACY_V3_H
 
 namespace Legacy
 {
@@ -15,3 +19,5 @@ bool32 VideoSkipCB();
 } // namespace v3
 
 } // namespace Legacy
+
+#endif // DRAWING_LEGACY_V3_H

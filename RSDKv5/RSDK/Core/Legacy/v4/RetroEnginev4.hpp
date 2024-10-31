@@ -1,3 +1,7 @@
+#include "../RetroEngineLegacy.hpp"
+
+#ifndef RETRO_ENGINE_LEGACY_V4_H
+#define RETRO_ENGINE_LEGACY_V4_H
 
 namespace Legacy
 {
@@ -27,3 +31,5 @@ void LoadXMLStages(const tinyxml2::XMLElement* gameElement);
 
 } // namespace v4
 } // namespace Legacy
+
+#endif // RETRO_ENGINE_LEGACY_V4_H

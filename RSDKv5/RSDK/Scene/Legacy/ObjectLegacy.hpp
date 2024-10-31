@@ -1,3 +1,7 @@
+#include "../Object.hpp"
+
+#ifndef OBJECT_LEGACY_H
+#define OBJECT_LEGACY_H
 
 #define LEGACY_RETRO_USE_COMPILER (1)
 
@@ -25,3 +29,5 @@ extern char scriptErrorMessage[0x400];
 bool32 ConvertStringToInteger(const char *text, int32 *value);
 
 } // namespace Legacy
+
+#endif // OBJECT_LEGACY_H

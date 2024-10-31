@@ -1,3 +1,5 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
 #ifndef PALETTE_H
 #define PALETTE_H
 

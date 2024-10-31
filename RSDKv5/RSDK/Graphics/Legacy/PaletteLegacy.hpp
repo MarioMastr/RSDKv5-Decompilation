@@ -1,3 +1,7 @@
+#include "../Palette.hpp"
+
+#ifndef PALETTE_LEGACY_H
+#define PALETTE_LEGACY_H
 
 namespace Legacy
 {
@@ -140,3 +144,5 @@ void SetLimitedFade(uint8 paletteID, uint8 R, uint8 G, uint8 B, uint16 blendAmou
 } // namespace v3
 
 } // namespace Legacy
+
+#endif // PALETTE_LEGACY_H

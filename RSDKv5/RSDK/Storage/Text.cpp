@@ -1,10 +1,6 @@
-#include "RSDK/Core/RetroEngine.hpp"
+#include "Text.hpp"
 
 using namespace RSDK;
-
-#if RETRO_REV0U
-#include "Legacy/TextLegacy.cpp"
-#endif
 
 // From here: https://rosettacode.org/wiki/MD5#C
 

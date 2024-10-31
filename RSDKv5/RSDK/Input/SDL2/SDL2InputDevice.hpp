@@ -1,3 +1,7 @@
+#include "../Input.hpp"
+
+#ifndef SDL2_INPUT_DEVICE_H
+#define SDL2_INPUT_DEVICE_H
 
 namespace SKU
 {
@@ -44,3 +48,5 @@ void InitSDL2InputAPI();
 void ReleaseSDL2InputAPI();
 
 } // namespace SKU
+
+#endif // SDL2_INPUT_DEVICE_H

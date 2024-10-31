@@ -1,3 +1,9 @@
+#include "../Scene3DLegacy.hpp"
+
+using namespace RSDK;
+
+#ifndef SCENE_3D_LEGACY_V4_H
+#define SCENE_3D_LEGACY_V4_H
 
 namespace Legacy
 {
@@ -8,11 +14,11 @@ namespace v4
 #define LEGACY_v4_VERTEXBUFFER_SIZE (0x1000)
 #define LEGACY_v4_FACEBUFFER_SIZE   (0x400)
 
-extern Face faceBuffer[LEGACY_v4_FACEBUFFER_SIZE];
-extern Vertex vertexBuffer[LEGACY_v4_VERTEXBUFFER_SIZE];
-extern Vertex vertexBufferT[LEGACY_v4_VERTEXBUFFER_SIZE];
+extern RSDK::Legacy::Face faceBuffer[LEGACY_v4_FACEBUFFER_SIZE];
+extern RSDK::Legacy::Vertex vertexBuffer[LEGACY_v4_VERTEXBUFFER_SIZE];
+extern RSDK::Legacy::Vertex vertexBufferT[LEGACY_v4_VERTEXBUFFER_SIZE];
 
-extern DrawListEntry3D drawList3D[LEGACY_v4_FACEBUFFER_SIZE];
+extern RSDK::Legacy::DrawListEntry3D drawList3D[LEGACY_v4_FACEBUFFER_SIZE];
 
 extern int32 fogColor;
 extern int32 fogStrength;
@@ -34,3 +40,5 @@ void Draw3DScene(int32 spriteSheetID);
 } // namespace v4
 
 } // namespace Legacy
+
+#endif // SCENE_3D_LEGACY_V4_H

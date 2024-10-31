@@ -1,3 +1,7 @@
+#include "../Text.hpp"
+
+#ifndef TEXT_LEGACY_H
+#define TEXT_LEGACY_H
 
 namespace Legacy
 {
@@ -68,3 +72,5 @@ void DrawBitmapText(void *menu, int32 XPos, int32 YPos, int32 scale, int32 spaci
 } // namespace v3
 
 } // namespace Legacy
+
+#endif // TEXT_LEGACY_H

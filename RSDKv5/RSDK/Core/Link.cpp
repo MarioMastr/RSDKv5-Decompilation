@@ -1,4 +1,3 @@
-#include "RSDK/Core/RetroEngine.hpp"
 #include "Link.hpp"
 
 using namespace RSDK;

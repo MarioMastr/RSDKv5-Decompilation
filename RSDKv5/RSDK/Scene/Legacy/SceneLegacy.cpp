@@ -1,6 +1,4 @@
-
-#include "v3/SceneLegacyv3.cpp"
-#include "v4/SceneLegacyv4.cpp"
+#include "SceneLegacy.hpp"
 
 int32 RSDK::Legacy::stageMode = 0;
 

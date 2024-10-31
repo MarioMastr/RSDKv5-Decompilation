@@ -1,4 +1,4 @@
-
+#include "ScriptLegacyv4.hpp"
 
 RSDK::Legacy::v4::ObjectScript RSDK::Legacy::v4::objectScriptList[LEGACY_v4_OBJECT_COUNT];
 RSDK::Legacy::v4::ScriptFunction RSDK::Legacy::v4::scriptFunctionList[LEGACY_v4_FUNCTION_COUNT];

@@ -1,5 +1,4 @@
-#include "v3/Scene3DLegacyv3.cpp"
-#include "v4/Scene3DLegacyv4.cpp"
+#include "Scene3DLegacy.hpp"
 
 int32 RSDK::Legacy::vertexCount = 0;
 int32 RSDK::Legacy::faceCount   = 0;

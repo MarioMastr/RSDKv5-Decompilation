@@ -1,3 +1,9 @@
+#include "../../Collision.hpp"
+
+using namespace RSDK;
+
+#ifndef COLLISION_LEGACY_V4_H
+#define COLLISION_LEGACY_V4_H
 
 namespace Legacy
 {
@@ -102,3 +108,5 @@ void ObjectREntityGrip(int32 xOffset, int32 yOffset, int32 cPath); // Added in O
 } // namespace v4
 
 } // namespace Legacy
+
+#endif // COLLISION_LEGACY_V4_H

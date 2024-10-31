@@ -1,3 +1,5 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
 #ifndef SPRITE_H
 #define SPRITE_H
 

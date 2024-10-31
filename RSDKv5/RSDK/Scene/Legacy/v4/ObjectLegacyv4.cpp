@@ -1,3 +1,4 @@
+#include "ObjectLegacyv4.hpp"
 
 // Game Objects
 int32 RSDK::Legacy::v4::objectEntityPos = 0;

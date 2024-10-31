@@ -1,6 +1,11 @@
-using ShaderEntry = ShaderEntryBase;
+#include "../Drawing.hpp"
 
-class RenderDevice : public RenderDeviceBase
+#ifndef SDL2_RENDER_DEVICE_H
+#define SDL2_RENDER_DEVICE_H
+
+using ShaderEntry = RSDK::ShaderEntryBase;
+
+class RenderDevice : public RSDK::RenderDeviceBase
 {
 public:
     struct WindowInfo {
@@ -44,13 +49,13 @@ public:
     static void LoadShader(const char *fileName, bool32 linear);
 
     static inline void ShowCursor(bool32 shown) { SDL_ShowCursor(shown); }
-    static inline bool GetCursorPos(Vector2 *pos)
+    static inline bool GetCursorPos(RSDK::Vector2 *pos)
     {
         SDL_GetMouseState(&pos->x, &pos->y);
         return true;
     };
 
-    static inline void SetWindowTitle() { SDL_SetWindowTitle(window, gameVerInfo.gameTitle); };
+    static inline void SetWindowTitle() { SDL_SetWindowTitle(window, RSDK::gameVerInfo.gameTitle); };
 
     static SDL_Window *window;
     static SDL_Renderer *renderer;
@@ -74,8 +79,10 @@ private:
     static unsigned long long curTicks;
     static unsigned long long prevTicks;
 
-    static RenderVertex vertexBuffer[!RETRO_REV02 ? 24 : 60];
+    static RSDK::RenderVertex vertexBuffer[!RETRO_REV02 ? 24 : 60];
 
     // thingo majigo for handling video/image swapping
     static uint8 lastTextureFormat;
 };
+
+#endif // !SDL2_RENDER_DEVICE_H

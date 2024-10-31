@@ -1,4 +1,7 @@
+#include "../ModAPI.hpp"
 
+#ifndef MOD_API_LEGACY_H
+#define MOD_API_LEGACY_H
 
 namespace Legacy
 {
@@ -57,3 +60,5 @@ void ApplyWindowChanges();
 #endif
 
 } // namespace Legacy
+
+#endif // MOD_API_LEGACY_H

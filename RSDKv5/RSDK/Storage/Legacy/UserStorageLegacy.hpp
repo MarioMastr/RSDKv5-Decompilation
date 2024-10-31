@@ -1,3 +1,7 @@
+#include "../Storage.hpp"
+
+#ifndef USER_STORAGE_LEGACY_H
+#define USER_STORAGE_LEGACY_H
 
 namespace Legacy
 {
@@ -60,3 +64,5 @@ void NotifyCallback(int32 *callback, int32 *param1, int32 *param2, int32 *param3
 } // namespace v4
 
 } // namespace Legacy
+
+#endif // USER_STORAGE_LEGACY_H

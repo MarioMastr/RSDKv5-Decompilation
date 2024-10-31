@@ -1,6 +1,13 @@
+#include "../RetroEngine.hpp"
 
-#include "v3/RetroEnginev3.hpp"
-#include "v4/RetroEnginev4.hpp"
+#ifndef RETRO_ENGINE_LEGACY_H
+#define RETRO_ENGINE_LEGACY_H
+
+#if RETRO_USE_MOD_LOADER
+// both v3 and v4 use these
+extern std::vector<RSDK::SceneListEntry> listData;
+extern std::vector<RSDK::SceneListInfo> listCategory;
+#endif
 
 namespace Legacy
 {
@@ -59,3 +66,8 @@ extern int32 cosM7LookupTable[0x200];
 void CalculateTrigAnglesM7();
 
 } // namespace Legacy
+
+#include "v3/RetroEnginev3.hpp"
+#include "v4/RetroEnginev4.hpp"
+
+#endif // RETRO_ENGINE_LEGACY_H

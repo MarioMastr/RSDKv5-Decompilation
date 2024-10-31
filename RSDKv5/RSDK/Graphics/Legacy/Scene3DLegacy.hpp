@@ -1,3 +1,7 @@
+#include "../Scene3D.hpp"
+
+#ifndef SCENE_3D_LEGACY_H
+#define SCENE_3D_LEGACY_H
 
 namespace Legacy
 {
@@ -71,3 +75,5 @@ void ProcessScanEdgeUV(Vertex *vertA, Vertex *vertB);
 
 #include "v3/Scene3DLegacyv3.hpp"
 #include "v4/Scene3DLegacyv4.hpp"
+
+#endif // SCENE_3D_LEGACY_H

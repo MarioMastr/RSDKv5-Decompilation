@@ -1,3 +1,5 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
 #ifndef DEVFONT_H
 #define DEVFONT_H
 

@@ -1,10 +1,6 @@
-#include "RSDK/Core/RetroEngine.hpp"
+#include "Audio.hpp"
 
 using namespace RSDK;
-
-#if RETRO_REV0U
-#include "Legacy/AudioLegacy.cpp"
-#endif
 
 #define STB_VORBIS_NO_PUSHDATA_API
 #define STB_VORBIS_NO_STDIO
@@ -30,8 +26,6 @@ float linearInterpolationLookup[LINEAR_INTERPOLATION_LOOKUP_LENGTH];
 
 #if RETRO_AUDIODEVICE_XAUDIO
 #include "XAudio/XAudioDevice.cpp"
-#elif RETRO_AUDIODEVICE_SDL2
-#include "SDL2/SDL2AudioDevice.cpp"
 #elif RETRO_AUDIODEVICE_PORT
 #include "PortAudio/PortAudioDevice.cpp"
 #elif RETRO_AUDIODEVICE_MINI

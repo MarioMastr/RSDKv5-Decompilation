@@ -1,4 +1,4 @@
-
+#include "DrawingLegacyv4.hpp"
 
 void RSDK::Legacy::v4::DrawObjectList(int32 group)
 {

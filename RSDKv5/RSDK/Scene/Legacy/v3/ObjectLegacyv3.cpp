@@ -1,3 +1,4 @@
+#include "ObjectLegacyv3.hpp"
 
 int32 RSDK::Legacy::v3::objectLoop    = 0;
 int32 RSDK::Legacy::v3::curObjectType = 0;

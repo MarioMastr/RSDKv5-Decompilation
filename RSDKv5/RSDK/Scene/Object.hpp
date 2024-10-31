@@ -1,3 +1,5 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
 #ifndef OBJECT_H
 #define OBJECT_H
 

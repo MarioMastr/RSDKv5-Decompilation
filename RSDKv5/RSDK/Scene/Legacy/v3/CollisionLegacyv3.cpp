@@ -1,3 +1,4 @@
+#include "CollisionLegacyv3.hpp"
 
 int32 RSDK::Legacy::v3::collisionLeft   = 0;
 int32 RSDK::Legacy::v3::collisionTop    = 0;
@@ -79,7 +80,7 @@ int32 RSDK::Legacy::v3::AddDebugHitbox(uint8 type, Entity *entity, int32 left, i
 }
 #endif
 
-RSDK::Legacy::Hitbox *RSDK::Legacy::v3::GetPlayerHitbox(Player *player)
+RSDK::Legacy::Hitbox *RSDK::Legacy::v3::GetPlayerHitbox(RSDK::Legacy::v3::Player *player)
 {
     AnimationFile *animFile = player->animationFile;
     return &hitboxList
@@ -87,7 +88,7 @@ RSDK::Legacy::Hitbox *RSDK::Legacy::v3::GetPlayerHitbox(Player *player)
          + animFile->hitboxListOffset];
 }
 
-void RSDK::Legacy::v3::FindFloorPosition(Player *player, CollisionSensor *sensor, int32 startY)
+void RSDK::Legacy::v3::FindFloorPosition(RSDK::Legacy::v3::Player *player, CollisionSensor *sensor, int32 startY)
 {
     int32 c     = 0;
     int32 angle = sensor->angle;
@@ -179,7 +180,7 @@ void RSDK::Legacy::v3::FindFloorPosition(Player *player, CollisionSensor *sensor
         }
     }
 }
-void RSDK::Legacy::v3::FindLWallPosition(Player *player, CollisionSensor *sensor, int32 startX)
+void RSDK::Legacy::v3::FindLWallPosition(RSDK::Legacy::v3::Player *player, CollisionSensor *sensor, int32 startX)
 {
     int32 c     = 0;
     int32 angle = sensor->angle;
@@ -268,7 +269,7 @@ void RSDK::Legacy::v3::FindLWallPosition(Player *player, CollisionSensor *sensor
         }
     }
 }
-void RSDK::Legacy::v3::FindRoofPosition(Player *player, CollisionSensor *sensor, int32 startY)
+void RSDK::Legacy::v3::FindRoofPosition(RSDK::Legacy::v3::Player *player, CollisionSensor *sensor, int32 startY)
 {
     int32 c     = 0;
     int32 angle = sensor->angle;
@@ -360,7 +361,7 @@ void RSDK::Legacy::v3::FindRoofPosition(Player *player, CollisionSensor *sensor,
         }
     }
 }
-void RSDK::Legacy::v3::FindRWallPosition(Player *player, CollisionSensor *sensor, int32 startX)
+void RSDK::Legacy::v3::FindRWallPosition(RSDK::Legacy::v3::Player *player, CollisionSensor *sensor, int32 startX)
 {
     int32 c;
     int32 angle = sensor->angle;
@@ -450,7 +451,7 @@ void RSDK::Legacy::v3::FindRWallPosition(Player *player, CollisionSensor *sensor
     }
 }
 
-void RSDK::Legacy::v3::FloorCollision(Player *player, CollisionSensor *sensor)
+void RSDK::Legacy::v3::FloorCollision(RSDK::Legacy::v3::Player *player, CollisionSensor *sensor)
 {
     int32 c;
     int32 startY = sensor->YPos >> 16;
@@ -537,7 +538,7 @@ void RSDK::Legacy::v3::FloorCollision(Player *player, CollisionSensor *sensor)
         }
     }
 }
-void RSDK::Legacy::v3::LWallCollision(Player *player, CollisionSensor *sensor)
+void RSDK::Legacy::v3::LWallCollision(RSDK::Legacy::v3::Player *player, CollisionSensor *sensor)
 {
     int32 c;
     int32 startX = sensor->XPos >> 16;
@@ -610,7 +611,7 @@ void RSDK::Legacy::v3::LWallCollision(Player *player, CollisionSensor *sensor)
         }
     }
 }
-void RSDK::Legacy::v3::RoofCollision(Player *player, CollisionSensor *sensor)
+void RSDK::Legacy::v3::RoofCollision(RSDK::Legacy::v3::Player *player, CollisionSensor *sensor)
 {
     int32 c;
     int32 startY = sensor->YPos >> 16;
@@ -693,7 +694,7 @@ void RSDK::Legacy::v3::RoofCollision(Player *player, CollisionSensor *sensor)
         }
     }
 }
-void RSDK::Legacy::v3::RWallCollision(Player *player, CollisionSensor *sensor)
+void RSDK::Legacy::v3::RWallCollision(RSDK::Legacy::v3::Player *player, CollisionSensor *sensor)
 {
     int32 c;
     int32 startX = sensor->XPos >> 16;
@@ -767,7 +768,7 @@ void RSDK::Legacy::v3::RWallCollision(Player *player, CollisionSensor *sensor)
     }
 }
 
-void RSDK::Legacy::v3::ProcessAirCollision(Player *player)
+void RSDK::Legacy::v3::ProcessAirCollision(RSDK::Legacy::v3::Player *player)
 {
     Hitbox *playerHitbox = GetPlayerHitbox(player);
     collisionLeft        = playerHitbox->left[0];
@@ -1047,7 +1048,7 @@ void RSDK::Legacy::v3::ProcessAirCollision(Player *player)
         scriptEng.checkResult = 2;
     }
 }
-void RSDK::Legacy::v3::ProcessPathGrip(Player *player)
+void RSDK::Legacy::v3::ProcessPathGrip(RSDK::Legacy::v3::Player *player)
 {
     int32 cosValue256;
     int32 sinValue256;
@@ -1523,7 +1524,7 @@ void RSDK::Legacy::v3::ProcessPathGrip(Player *player)
     }
 }
 
-void RSDK::Legacy::v3::SetPathGripSensors(Player *player)
+void RSDK::Legacy::v3::SetPathGripSensors(RSDK::Legacy::v3::Player *player)
 {
     Hitbox *playerHitbox = GetPlayerHitbox(player);
     switch (player->collisionMode) {
@@ -1607,7 +1608,7 @@ void RSDK::Legacy::v3::SetPathGripSensors(Player *player)
     }
 }
 
-void RSDK::Legacy::v3::ProcessPlayerTileCollisions(Player *player)
+void RSDK::Legacy::v3::ProcessPlayerTileCollisions(RSDK::Legacy::v3::Player *player)
 {
     player->flailing[0] = 0;
     player->flailing[1] = 0;

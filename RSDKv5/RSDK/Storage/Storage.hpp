@@ -1,3 +1,5 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
 #ifndef STORAGE_H
 #define STORAGE_H
 

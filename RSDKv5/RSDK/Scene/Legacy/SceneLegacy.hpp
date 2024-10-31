@@ -1,6 +1,7 @@
-#include "v3/SceneLegacyv3.hpp"
+#include "../Scene.hpp"
 
-#include "v4/SceneLegacyv4.hpp"
+#ifndef SCENE_LEGACY_H
+#define SCENE_LEGACY_H
 
 namespace Legacy
 {
@@ -250,3 +251,8 @@ inline void Copy16x16Tile(uint16 dest, uint16 src)
 void InitCameras();
 
 } // namespace Legacy
+
+#include "v3/SceneLegacyv3.hpp"
+#include "v4/SceneLegacyv4.hpp"
+
+#endif // SCENE_LEGACY_H

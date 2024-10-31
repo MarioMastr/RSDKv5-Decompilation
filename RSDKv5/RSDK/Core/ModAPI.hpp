@@ -1,3 +1,5 @@
+#include "RetroEngine.hpp"
+
 #ifndef MOD_API_H
 #define MOD_API_H
 

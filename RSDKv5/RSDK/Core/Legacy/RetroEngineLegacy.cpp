@@ -1,16 +1,15 @@
+#include "RetroEngineLegacy.hpp"
+
 #if RETRO_USE_MOD_LOADER
 // both v3 and v4 use these
-std::vector<SceneListEntry> listData;
-std::vector<SceneListInfo> listCategory;
+std::vector<RSDK::SceneListEntry> RSDK::listData;
+std::vector<RSDK::SceneListInfo> RSDK::listCategory;
 #endif
 
 namespace RSDK
 {
 namespace Legacy
 {
-
-#include "v3/RetroEnginev3.cpp"
-#include "v4/RetroEnginev4.cpp"
 
 int32 gameMode       = ENGINE_MAINGAME;
 bool32 usingBytecode = false;

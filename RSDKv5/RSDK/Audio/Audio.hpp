@@ -1,3 +1,5 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
 #ifndef AUDIO_H
 #define AUDIO_H
 

@@ -1,3 +1,4 @@
+#include "DrawingLegacyv3.hpp"
 
 void RSDK::Legacy::v3::DrawObjectList(int32 group)
 {

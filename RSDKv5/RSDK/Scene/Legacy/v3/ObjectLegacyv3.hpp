@@ -1,3 +1,7 @@
+#include "../ObjectLegacy.hpp"
+
+#ifndef OBJECT_LEGACY_V3_H
+#define OBJECT_LEGACY_V3_H
 
 namespace Legacy
 {
@@ -62,3 +66,5 @@ void SetObjectTypeName(const char *objectName, int32 objectID);
 } // namespace v3
 
 } // namespace Legacy
+
+#endif // OBJECT_LEGACY_V3_H

@@ -1,3 +1,5 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
 #ifndef ANIMATION_H
 #define ANIMATION_H
 

@@ -1,3 +1,4 @@
+#include "../../Collision.hpp"
 
 namespace Legacy
 {
@@ -70,25 +71,25 @@ enum EntityCollisionEffects {
 };
 
 #if !RETRO_USE_ORIGINAL_CODE
-int32 AddDebugHitbox(uint8 type, Entity *entity, int32 left, int32 top, int32 right, int32 bottom);
+int32 AddDebugHitbox(uint8 type, RSDK::Legacy::v3::Entity *entity, int32 left, int32 top, int32 right, int32 bottom);
 #endif
 
-Hitbox *GetPlayerHitbox(Player *player);
+RSDK::Legacy::Hitbox *GetPlayerHitbox(RSDK::Legacy::v3::Player *player);
 
-void FindFloorPosition(Player *player, CollisionSensor *sensor, int32 startYPos);
-void FindLWallPosition(Player *player, CollisionSensor *sensor, int32 startXPos);
-void FindRoofPosition(Player *player, CollisionSensor *sensor, int32 startYPos);
-void FindRWallPosition(Player *player, CollisionSensor *sensor, int32 startXPos);
-void FloorCollision(Player *player, CollisionSensor *sensor);
-void LWallCollision(Player *player, CollisionSensor *sensor);
-void RoofCollision(Player *player, CollisionSensor *sensor);
-void RWallCollision(Player *player, CollisionSensor *sensor);
-void SetPathGripSensors(Player *player);
+void FindFloorPosition(RSDK::Legacy::v3::Player *player, CollisionSensor *sensor, int32 startYPos);
+void FindLWallPosition(RSDK::Legacy::v3::Player *player, CollisionSensor *sensor, int32 startXPos);
+void FindRoofPosition(RSDK::Legacy::v3::Player *player, CollisionSensor *sensor, int32 startYPos);
+void FindRWallPosition(RSDK::Legacy::v3::Player *player, CollisionSensor *sensor, int32 startXPos);
+void FloorCollision(RSDK::Legacy::v3::Player *player, CollisionSensor *sensor);
+void LWallCollision(RSDK::Legacy::v3::Player *player, CollisionSensor *sensor);
+void RoofCollision(RSDK::Legacy::v3::Player *player, CollisionSensor *sensor);
+void RWallCollision(RSDK::Legacy::v3::Player *player, CollisionSensor *sensor);
+void SetPathGripSensors(RSDK::Legacy::v3::Player *player);
 
-void ProcessPathGrip(Player *player);
-void ProcessAirCollision(Player *player);
+void ProcessPathGrip(RSDK::Legacy::v3::Player *player);
+void ProcessAirCollision(RSDK::Legacy::v3::Player *player);
 
-void ProcessPlayerTileCollisions(Player *player);
+void ProcessPlayerTileCollisions(RSDK::Legacy::v3::Player *player);
 
 void TouchCollision(int32 left, int32 top, int32 right, int32 bottom);
 void BoxCollision(int32 left, int32 top, int32 right, int32 bottom);  // Standard
