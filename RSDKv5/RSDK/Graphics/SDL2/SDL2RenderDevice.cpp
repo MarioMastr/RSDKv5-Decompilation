@@ -518,7 +518,7 @@ bool RenderDevice::InitGraphicsAPI()
 #if !RETRO_USE_ORIGINAL_CODE
     if (screenWidth <= 512 && maxPixHeight <= 256) {
 #else
-    if (maxPixHeight <= 256) //{
+    if (maxPixHeight <= 256) {
 #endif
         textureSize.x = 512.0;
         textureSize.y = 256.0;
