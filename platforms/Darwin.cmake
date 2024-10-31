@@ -1,6 +1,13 @@
 project(RetroEngine)
 
-add_executable(RetroEngine ${RETRO_FILES} dependencies/mac/cocoaHelpers.mm)
+set(RENDERER_FILES
+    RSDKv5/RSDK/Graphics/SDL2/SDL2RenderDevice.cpp
+    RSDKv5/RSDK/Audio/SDL2/SDL2AudioDevice.cpp
+    RSDKv5/RSDK/Input/SDL2/SDL2InputDevice.cpp
+    RSDKv5/RSDK/Input/Keyboard/KBInputDevice.cpp
+)
+
+add_executable(RetroEngine ${RETRO_FILES} ${RENDERER_FILES} ${LEGACY_RETRO_FILES} dependencies/mac/cocoaHelpers.mm)
 
 set(RETRO_SUBSYSTEM "SDL2" CACHE STRING "The subsystem to use")
 
