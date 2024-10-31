@@ -1,15 +1,15 @@
 project(RetroEngine)
 
 set(RENDERER_FILES
-    RSDKv5/RSDK/Graphics/SDL2/SDL2RenderDevice.cpp
-    RSDKv5/RSDK/Audio/SDL2/SDL2AudioDevice.cpp
-    RSDKv5/RSDK/Input/SDL2/SDL2InputDevice.cpp
+    RSDKv5/RSDK/Graphics/SDL3/SDL3RenderDevice.cpp
+    RSDKv5/RSDK/Audio/SDL3/SDL3AudioDevice.cpp
+    RSDKv5/RSDK/Input/SDL3/SDL3InputDevice.cpp
     RSDKv5/RSDK/Input/Keyboard/KBInputDevice.cpp
 )
 
 add_executable(RetroEngine ${RETRO_FILES} ${RENDERER_FILES} ${LEGACY_RETRO_FILES} dependencies/mac/cocoaHelpers.mm)
 
-set(RETRO_SUBSYSTEM "SDL2" CACHE STRING "The subsystem to use")
+set(RETRO_SUBSYSTEM "SDL3" CACHE STRING "The subsystem to use")
 
 set(DEP_PATH mac)
 
@@ -31,18 +31,18 @@ find_package(Boost COMPONENTS filesystem REQUIRED)
 if(NOT ${Boost_FOUND})
     message(NOTICE "boost not found, install libogg from homebrew")
 else()
-    message("found libogg")
+    message("found boost")
     add_library(libboost ALIAS Boost::filesystem)
     target_link_libraries(RetroEngine libboost)
 endif()
 
-find_package(SDL2 CONFIG)
-if(NOT ${SDL2_FOUND})
-    message(NOTICE "sdl2 not found, install sdl2 from homebrew")
+find_package(SDL3 CONFIG)
+if(NOT ${SDL3_FOUND})
+    message(NOTICE "sdl3 not found, build sdl3 and install it")
 else()
-    message("found sdl2")
-    add_library(libSDL2 ALIAS SDL2::SDL2-static)
-    target_link_libraries(RetroEngine libSDL2)
+    message("found sdl3")
+    add_library(libSDL3 ALIAS SDL3::SDL3-static)
+    target_link_libraries(RetroEngine libSDL3)
 endif()
 
 find_package(PkgConfig)
