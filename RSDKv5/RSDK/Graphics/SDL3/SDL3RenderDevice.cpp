@@ -1,4 +1,4 @@
-#include "SDL2RenderDevice.hpp"
+#include "SDL3RenderDevice.hpp"
 
 using namespace RSDK;
 
@@ -48,11 +48,9 @@ bool RenderDevice::Init()
     flags |= SDL_WINDOW_FULLSCREEN;
 #endif
 
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, videoSettings.vsync ? "1" : "0");
 
-    window = SDL_CreateWindow(gameTitle, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, videoSettings.windowWidth, videoSettings.windowHeight,
-                              SDL_WINDOW_ALLOW_HIGHDPI | flags);
+    window = SDL_CreateWindow(gameTitle, videoSettings.windowWidth, videoSettings.windowHeight, SDL_WINDOW_HIGH_PIXEL_DENSITY | flags);
 
     if (!window) {
         PrintLog(PRINT_NORMAL, "ERROR: failed to create window!");
@@ -61,13 +59,13 @@ bool RenderDevice::Init()
 
     if (!videoSettings.windowed) {
         SDL_RestoreWindow(window);
-        SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-        SDL_ShowCursor(SDL_FALSE);
+        SDL_SetWindowFullscreen(window, true);
+        SDL_HideCursor();
     }
 
     if (!videoSettings.bordered) {
         SDL_RestoreWindow(window);
-        SDL_SetWindowBordered(window, SDL_FALSE);
+        SDL_SetWindowBordered(window, false);
     }
 
     PrintLog(PRINT_NORMAL, "w: %d h: %d windowed: %d", videoSettings.windowWidth, videoSettings.windowHeight, videoSettings.windowed);
@@ -199,7 +197,7 @@ void RenderDevice::FlipScreen()
     }
 #else
     int32 startVert = 0;
-    SDL_Rect src, dst;
+    SDL_FRect src, dst;
 
     // some cheating for today
 #define _SET_RECTS                                                                                                                                   \
@@ -223,14 +221,14 @@ void RenderDevice::FlipScreen()
             _SET_RECTS;
             src.w = vertexBuffer[startVert + 2].tex.x * 1024 - src.x;
             src.h = vertexBuffer[startVert + 2].tex.y * 512 - src.y;
-            SDL_RenderCopy(renderer, imageTexture, &src, &dst);
+            SDL_RenderTexture(renderer, imageTexture, &src, &dst);
             break;
 
         case 1:
             startVert = 0;
             _SET_RECTS;
 
-            SDL_RenderCopy(renderer, screenTexture[0], &src, &dst);
+            SDL_RenderTexture(renderer, screenTexture[0], &src, &dst);
             break;
 
         case 2:
@@ -241,7 +239,7 @@ void RenderDevice::FlipScreen()
 #endif
             _SET_RECTS;
 
-            SDL_RenderCopy(renderer, screenTexture[0], &src, &dst);
+            SDL_RenderTexture(renderer, screenTexture[0], &src, &dst);
 
 #if RETRO_REV02
             startVert = startVertex_2P[1];
@@ -250,7 +248,7 @@ void RenderDevice::FlipScreen()
 #endif
             _SET_RECTS;
 
-            SDL_RenderCopy(renderer, screenTexture[1], &src, &dst);
+            SDL_RenderTexture(renderer, screenTexture[1], &src, &dst);
             break;
 
 #if RETRO_REV02
@@ -258,17 +256,17 @@ void RenderDevice::FlipScreen()
             startVert = startVertex_3P[0];
             _SET_RECTS;
 
-            SDL_RenderCopy(renderer, screenTexture[0], &src, &dst);
+            SDL_RenderTexture(renderer, screenTexture[0], &src, &dst);
 
             startVert = startVertex_3P[1];
             _SET_RECTS;
 
-            SDL_RenderCopy(renderer, screenTexture[1], &src, &dst);
+            SDL_RenderTexture(renderer, screenTexture[1], &src, &dst);
 
             startVert = startVertex_3P[2];
             _SET_RECTS;
 
-            SDL_RenderCopy(renderer, screenTexture[2], &src, &dst);
+            SDL_RenderTexture(renderer, screenTexture[2], &src, &dst);
 
             break;
 
@@ -276,22 +274,22 @@ void RenderDevice::FlipScreen()
             startVert = 30;
             _SET_RECTS;
 
-            SDL_RenderCopy(renderer, screenTexture[0], &src, &dst);
+            SDL_RenderTexture(renderer, screenTexture[0], &src, &dst);
 
             startVert = 36;
             _SET_RECTS;
 
-            SDL_RenderCopy(renderer, screenTexture[1], &src, &dst);
+            SDL_RenderTexture(renderer, screenTexture[1], &src, &dst);
 
             startVert = 42;
             _SET_RECTS;
 
-            SDL_RenderCopy(renderer, screenTexture[2], &src, &dst);
+            SDL_RenderTexture(renderer, screenTexture[2], &src, &dst);
 
             startVert = 48;
             _SET_RECTS;
 
-            SDL_RenderCopy(renderer, screenTexture[3], &src, &dst);
+            SDL_RenderTexture(renderer, screenTexture[3], &src, &dst);
 
             break;
 #endif
@@ -348,9 +346,9 @@ void RenderDevice::RefreshWindow()
     SDL_HideWindow(window);
 
     if (videoSettings.windowed && videoSettings.bordered)
-        SDL_SetWindowBordered(window, SDL_TRUE);
+        SDL_SetWindowBordered(window, true);
     else
-        SDL_SetWindowBordered(window, SDL_FALSE);
+        SDL_SetWindowBordered(window, false);
 
     GetDisplays();
 
@@ -358,29 +356,28 @@ void RenderDevice::RefreshWindow()
     winRect.x = SDL_WINDOWPOS_CENTERED;
     winRect.y = SDL_WINDOWPOS_CENTERED;
     if (videoSettings.windowed || !videoSettings.exclusiveFS) {
-        int32 currentWindowDisplay = SDL_GetWindowDisplayIndex(window);
-        SDL_DisplayMode displayMode;
-        SDL_GetCurrentDisplayMode(currentWindowDisplay, &displayMode);
+        SDL_DisplayID currentWindowDisplay = SDL_GetDisplayForWindow(window);
+        const SDL_DisplayMode *displayMode = SDL_GetCurrentDisplayMode(currentWindowDisplay);
 
         if (videoSettings.windowed) {
-            if (videoSettings.windowWidth >= displayMode.w || videoSettings.windowHeight >= displayMode.h) {
-                videoSettings.windowWidth  = (displayMode.h / 480 * videoSettings.pixWidth);
-                videoSettings.windowHeight = displayMode.h / 480 * videoSettings.pixHeight;
+            if (videoSettings.windowWidth >= displayMode->w || videoSettings.windowHeight >= displayMode->h) {
+                videoSettings.windowWidth  = (displayMode->h / 480 * videoSettings.pixWidth);
+                videoSettings.windowHeight = displayMode->h / 480 * videoSettings.pixHeight;
             }
 
             winRect.w = videoSettings.windowWidth;
             winRect.h = videoSettings.windowHeight;
-            SDL_SetWindowFullscreen(window, SDL_FALSE);
-            SDL_ShowCursor(SDL_FALSE);
+            SDL_SetWindowFullscreen(window, false);
+            SDL_ShowCursor();
         }
         else {
-            winRect.w = displayMode.w;
-            winRect.h = displayMode.h;
-            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-            SDL_ShowCursor(SDL_TRUE);
+            winRect.w = displayMode->w;
+            winRect.h = displayMode->h;
+            SDL_SetWindowFullscreen(window, true);
+            SDL_ShowCursor();
         }
 
-        SDL_SetWindowSize(window, winRect.w, winRect.h);
+        SDL_SetWindowSize(window, winRect.w * 3, winRect.h * 3);
         SDL_SetWindowPosition(window, winRect.x, winRect.y);
     }
 
@@ -512,7 +509,7 @@ bool RenderDevice::InitGraphicsAPI()
     pixelSize.x = screens[0].size.x;
     pixelSize.y = screens[0].size.y;
 
-    SDL_RenderSetLogicalSize(renderer, videoSettings.pixWidth, SCREEN_YSIZE);
+    SDL_SetRenderLogicalPresentation(renderer, videoSettings.pixWidth, videoSettings.pixHeight, SDL_LOGICAL_PRESENTATION_STRETCH);
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
 #if !RETRO_USE_ORIGINAL_CODE
@@ -527,7 +524,7 @@ bool RenderDevice::InitGraphicsAPI()
         textureSize.x = 1024.0;
         textureSize.y = 512.0;
     }
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+    SDL_SetTextureScaleMode(*screenTexture, SDL_SCALEMODE_LINEAR);
     for (int32 s = 0; s < SCREEN_COUNT; ++s) {
         screenTexture[s] = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, textureSize.x, textureSize.y);
 
@@ -536,11 +533,12 @@ bool RenderDevice::InitGraphicsAPI()
             return 0;
         }
     }
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+    SDL_SetTextureScaleMode(*screenTexture, SDL_SCALEMODE_NEAREST);
+    SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_LINEAR);
     imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, RETRO_VIDEO_TEXTURE_W, RETRO_VIDEO_TEXTURE_H);
     if (!imageTexture)
         return false;
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+    SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_NEAREST);
 
     lastShaderID = -1;
     InitVertexBuffer();
@@ -596,7 +594,7 @@ bool RenderDevice::InitShaders()
 
 bool RenderDevice::SetupRendering()
 {
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    renderer = SDL_CreateRenderer(window, NULL);
 
     if (!renderer) {
         PrintLog(PRINT_NORMAL, "ERROR: failed to create renderer!");
@@ -621,27 +619,25 @@ bool RenderDevice::SetupRendering()
 
 void RenderDevice::GetDisplays()
 {
-    int32 currentWindowDisplay = SDL_GetWindowDisplayIndex(window);
+    SDL_DisplayID currentWindowDisplay = SDL_GetDisplayForWindow(window);
 
-    int32 dispCount = SDL_GetNumVideoDisplays();
+    int32 dispCount;
+    SDL_GetDisplays(&dispCount);
 
-    SDL_DisplayMode currentDisplay;
-    SDL_GetCurrentDisplayMode(currentWindowDisplay, &currentDisplay);
+    const SDL_DisplayMode *currentDisplay = SDL_GetCurrentDisplayMode(currentWindowDisplay);
 
     displayModeIndex = 0;
     for (int32 a = 0; a < dispCount; ++a) {
-        SDL_DisplayMode displayMode;
+        const SDL_DisplayMode *displayMode = SDL_GetCurrentDisplayMode(currentWindowDisplay);
+        displayWidth[a]      = displayMode->w;
+        displayHeight[a]     = displayMode->h;
 
-        SDL_GetCurrentDisplayMode(currentWindowDisplay, &displayMode);
-        displayWidth[a]  = displayMode.w;
-        displayHeight[a] = displayMode.h;
-
-        if (memcmp(&currentDisplay, &displayMode, sizeof(displayMode)) == 0) {
+        if (memcmp(&currentDisplay, &displayMode, sizeof(*displayMode)) == 0) {
             displayModeIndex = a;
         }
     }
 
-    displayCount = SDL_GetNumDisplayModes(currentWindowDisplay);
+    SDL_GetFullscreenDisplayModes(currentWindowDisplay, &displayCount);
     if (displayInfo.displays)
         free(displayInfo.displays);
 
@@ -650,7 +646,7 @@ void RenderDevice::GetDisplays()
     bool32 foundFullScreenDisplay = false;
 
     for (int32 d = displayCount - 1; d >= 0; --d) {
-        SDL_GetDisplayMode(currentWindowDisplay, d, &displayInfo.displays[newDisplayCount].internal);
+        displayInfo.displays[newDisplayCount].internal.displayID = currentWindowDisplay - 1;
 
         int32 refreshRate = displayInfo.displays[newDisplayCount].refresh_rate;
         if (refreshRate >= 59 && (refreshRate <= 60 || refreshRate >= 120) && displayInfo.displays[newDisplayCount].height >= (SCREEN_YSIZE * 2)) {
@@ -678,68 +674,67 @@ void RenderDevice::GetDisplays()
 void RenderDevice::GetWindowSize(int32 *width, int32 *height)
 {
     if (!videoSettings.windowed) {
-        SDL_GetRendererOutputSize(renderer, width, height);
+        SDL_GetCurrentRenderOutputSize(renderer, width, height);
     }
     else {
-        int32 currentWindowDisplay = SDL_GetWindowDisplayIndex(window);
+        SDL_DisplayID currentWindowDisplay = SDL_GetDisplayForWindow(window);
 
-        SDL_DisplayMode display;
-        SDL_GetCurrentDisplayMode(currentWindowDisplay, &display);
+        const SDL_DisplayMode *display = SDL_GetCurrentDisplayMode(currentWindowDisplay);
 
         if (width)
-            *width = display.w;
+            *width = display->w;
 
         if (height)
-            *height = display.h;
+            *height = display->h;
     }
+
+    SDL_Log("width = %i, height = %i", *width, *height);
 }
 
 void RenderDevice::ProcessEvent(SDL_Event event)
 {
-    switch (event.type) {
-        case SDL_WINDOWEVENT:
-            switch (event.window.event) {
-                case SDL_WINDOWEVENT_MAXIMIZED: {
-                    SDL_RestoreWindow(window);
-                    SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-                    SDL_ShowCursor(SDL_FALSE);
-                    videoSettings.windowed = false;
-                    break;
-                }
+    switch (event.window.type) {
+        case SDL_EVENT_WINDOW_MAXIMIZED: {
+            SDL_RestoreWindow(window);
+            SDL_SetWindowFullscreen(window, true);
+            SDL_HideCursor();
+            videoSettings.windowed = false;
+            break;
+        }
 
-                case SDL_WINDOWEVENT_CLOSE: isRunning = false; break;
+        case SDL_EVENT_WINDOW_CLOSE_REQUESTED: isRunning = false; break;
 
-                case SDL_WINDOWEVENT_FOCUS_GAINED:
+        case SDL_EVENT_WINDOW_FOCUS_GAINED:
 #if RETRO_REV02
-                    SKU::userCore->focusState = 0;
+            SKU::userCore->focusState = 0;
 #endif
-                    break;
-
-                case SDL_WINDOWEVENT_FOCUS_LOST:
-#if RETRO_REV02
-                    SKU::userCore->focusState = 1;
-#endif
-                    break;
-            }
             break;
 
-        case SDL_CONTROLLERDEVICEADDED: {
-            SDL_GameController *game_controller = SDL_GameControllerOpen(event.cdevice.which);
+        case SDL_EVENT_WINDOW_FOCUS_LOST:
+#if RETRO_REV02
+            SKU::userCore->focusState = 1;
+#endif
+            break;
+        default: break;
+    }
+    switch (event.type) {
+        case SDL_EVENT_GAMEPAD_ADDED: {
+            SDL_Gamepad *game_pad = SDL_OpenGamepad(event.cdevice.which);
 
-            if (game_controller != NULL) {
+            if (game_pad != NULL) {
                 uint32 id;
                 char idBuffer[0x20];
-                sprintf_s(idBuffer, sizeof(idBuffer), "SDLDevice%d", SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(game_controller)));
+                sprintf_s(idBuffer, sizeof(idBuffer), "SDLDevice%d", SDL_GetJoystickID(SDL_GetGamepadJoystick(game_pad)));
                 GenerateHashCRC(&id, idBuffer);
 
-                if (SKU::InitSDL2InputDevice(id, game_controller) == NULL)
-                    SDL_GameControllerClose(game_controller);
+                if (SKU::InitSDL3InputDevice(id, game_pad) == NULL)
+                    SDL_CloseGamepad(game_pad);
             }
 
             break;
         }
 
-        case SDL_CONTROLLERDEVICEREMOVED: {
+        case SDL_EVENT_GAMEPAD_REMOVED: {
             uint32 id;
             char idBuffer[0x20];
             sprintf_s(idBuffer, sizeof(idBuffer), "SDLDevice%d", event.cdevice.which);
@@ -749,21 +744,21 @@ void RenderDevice::ProcessEvent(SDL_Event event)
             break;
         }
 
-        case SDL_APP_WILLENTERFOREGROUND:
+        case SDL_EVENT_WILL_ENTER_FOREGROUND:
 #if RETRO_REV02
             SKU::userCore->focusState = 0;
 #endif
             break;
 
-        case SDL_APP_WILLENTERBACKGROUND:
+        case SDL_EVENT_WILL_ENTER_BACKGROUND:
 #if RETRO_REV02
             SKU::userCore->focusState = 1;
 #endif
             break;
 
-        case SDL_APP_TERMINATING: isRunning = false; break;
+        case SDL_EVENT_TERMINATING: isRunning = false; break;
 
-        case SDL_MOUSEBUTTONDOWN:
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
             switch (event.button.button) {
                 case SDL_BUTTON_LEFT: touchInfo.down[0] = true; touchInfo.count = 1;
 #if !RETRO_REV02
@@ -780,7 +775,7 @@ void RenderDevice::ProcessEvent(SDL_Event event)
             }
             break;
 
-        case SDL_MOUSEBUTTONUP:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
             switch (event.button.button) {
                 case SDL_BUTTON_LEFT: touchInfo.down[0] = false; touchInfo.count = 0;
 #if !RETRO_REV02
@@ -797,13 +792,14 @@ void RenderDevice::ProcessEvent(SDL_Event event)
             }
             break;
 
-        case SDL_FINGERMOTION:
-        case SDL_FINGERDOWN:
-        case SDL_FINGERUP: {
-            int32 count     = SDL_GetNumTouchFingers(event.tfinger.touchId);
+        case SDL_EVENT_FINGER_MOTION:
+        case SDL_EVENT_FINGER_DOWN:
+        case SDL_EVENT_FINGER_UP: {
+            int32 count;
+            SDL_GetTouchFingers(event.tfinger.touchID, &count);
             touchInfo.count = 0;
             for (int32 i = 0; i < count; i++) {
-                SDL_Finger *finger = SDL_GetTouchFinger(event.tfinger.touchId, i);
+                SDL_Finger *finger = *SDL_GetTouchFingers(event.tfinger.touchID, &i);
                 if (finger) {
                     touchInfo.down[touchInfo.count] = true;
                     touchInfo.x[touchInfo.count]    = finger->x;
@@ -814,13 +810,13 @@ void RenderDevice::ProcessEvent(SDL_Event event)
             break;
         }
 
-        case SDL_KEYDOWN:
+        case SDL_EVENT_KEY_DOWN:
 #if !RETRO_REV02
             ++RSDK::SKU::buttonDownCount;
 #endif
-            switch (event.key.keysym.scancode) {
+            switch (event.key.scancode) {
                 case SDL_SCANCODE_RETURN:
-                    if (event.key.keysym.mod & KMOD_LALT) {
+                    if (event.key.mod & SDL_KMOD_LALT) {
                         videoSettings.windowed ^= 1;
                         UpdateGameWindow();
                         changedVideoSettings = false;
@@ -834,7 +830,7 @@ void RenderDevice::ProcessEvent(SDL_Event event)
 
                 default:
 #if RETRO_INPUTDEVICE_KEYBOARD
-                    SKU::UpdateKeyState(event.key.keysym.scancode);
+                    SKU::UpdateKeyState(event.key.scancode);
 #endif
                     break;
 
@@ -851,7 +847,7 @@ void RenderDevice::ProcessEvent(SDL_Event event)
                     }
                     else {
 #if RETRO_INPUTDEVICE_KEYBOARD
-                        SKU::UpdateKeyState(event.key.keysym.scancode);
+                        SKU::UpdateKeyState(event.key.scancode);
 #endif
                     }
 
@@ -926,7 +922,7 @@ void RenderDevice::ProcessEvent(SDL_Event event)
                     if (engine.devMenu) {
                         // Quick-Reload
 #if RETRO_USE_MOD_LOADER
-                        if (event.key.keysym.mod & KMOD_LCTRL)
+                        if (event.key.mod & SDL_KMOD_LCTRL)
                             RefreshModFolders();
 #endif
 
@@ -1004,14 +1000,14 @@ void RenderDevice::ProcessEvent(SDL_Event event)
             }
             break;
 
-        case SDL_KEYUP:
+        case SDL_EVENT_KEY_UP:
 #if !RETRO_REV02
             --RSDK::SKU::buttonDownCount;
 #endif
-            switch (event.key.keysym.scancode) {
+            switch (event.key.scancode) {
                 default:
 #if RETRO_INPUTDEVICE_KEYBOARD
-                    SKU::ClearKeyState(event.key.keysym.scancode);
+                    SKU::ClearKeyState(event.key.scancode);
 #endif
                     break;
 
@@ -1030,7 +1026,7 @@ void RenderDevice::ProcessEvent(SDL_Event event)
             }
             break;
 
-        case SDL_QUIT: isRunning = false; break;
+        case SDL_EVENT_QUIT: isRunning = false; break;
     }
 }
 
@@ -1053,10 +1049,10 @@ void RenderDevice::SetupImageTexture(int32 width, int32 height, uint8 *imagePixe
     if (lastTextureFormat != SHADER_RGB_IMAGE) {
         if (imageTexture)
             SDL_DestroyTexture(imageTexture);
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+        SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_LINEAR);
 
         imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+        SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_NEAREST);
 
         lastTextureFormat = SHADER_RGB_IMAGE;
     }
@@ -1084,11 +1080,10 @@ void RenderDevice::SetupVideoTexture_YUV420(int32 width, int32 height, uint8 *yP
     if (lastTextureFormat != SHADER_YUV_420) {
         if (imageTexture)
             SDL_DestroyTexture(imageTexture);
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+        SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_LINEAR);
 
         imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_YV12, SDL_TEXTUREACCESS_STREAMING, width, height);
-
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+        SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_NEAREST);
         lastTextureFormat = SHADER_YUV_420;
     }
 
@@ -1100,11 +1095,11 @@ void RenderDevice::SetupVideoTexture_YUV422(int32 width, int32 height, uint8 *yP
     if (lastTextureFormat != SHADER_YUV_422) {
         if (imageTexture)
             SDL_DestroyTexture(imageTexture);
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+        SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_LINEAR);
 
         imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_YV12, SDL_TEXTUREACCESS_STREAMING, width, height);
 
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+        SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_NEAREST);
         lastTextureFormat = SHADER_YUV_422;
     }
 
@@ -1116,11 +1111,11 @@ void RenderDevice::SetupVideoTexture_YUV444(int32 width, int32 height, uint8 *yP
     if (lastTextureFormat != SHADER_YUV_444) {
         if (imageTexture)
             SDL_DestroyTexture(imageTexture);
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+        SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_LINEAR);
 
         imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_YV12, SDL_TEXTUREACCESS_STREAMING, width, height);
 
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+        SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_NEAREST);
         lastTextureFormat = SHADER_YUV_444;
     }
 

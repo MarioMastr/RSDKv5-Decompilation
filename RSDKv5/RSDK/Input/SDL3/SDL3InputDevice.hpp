@@ -6,7 +6,7 @@
 namespace SKU
 {
 
-struct InputDeviceSDL : InputDevice {
+struct InputDeviceSDL : RSDK::InputDevice {
     void UpdateInput();
     void ProcessInput(int32 controllerID);
     void CloseDevice();
@@ -38,14 +38,14 @@ struct InputDeviceSDL : InputDevice {
     float vDelta_R;
     float hDelta_R;
 
-    SDL_GameController *controllerPtr;
+    SDL_Gamepad *controllerPtr;
     bool32 swapABXY;
 };
 
-InputDeviceSDL *InitSDL2InputDevice(uint32 id, SDL_GameController *game_controller);
+InputDeviceSDL *InitSDL3InputDevice(uint32 id, SDL_Gamepad *game_controller);
 
-void InitSDL2InputAPI();
-void ReleaseSDL2InputAPI();
+void InitSDL3InputAPI();
+void ReleaseSDL3InputAPI();
 
 } // namespace SKU
 

@@ -15,6 +15,10 @@ namespace RSDK
 #define AUDIO_FREQUENCY (44100)
 #define AUDIO_CHANNELS  (2)
 
+#define WAV_SIG_HEADER (0x46464952) // RIFF
+#define WAV_SIG_DATA   (0x61746164) // data
+
+
 struct SFXInfo {
     RETRO_HASH_MD5(hash);
     float *buffer;

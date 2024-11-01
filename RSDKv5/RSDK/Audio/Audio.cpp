@@ -52,8 +52,6 @@ void AudioDeviceBase::ProcessAudioMixing(void *stream, int32 length)
     SAMPLE_FORMAT *streamF    = (SAMPLE_FORMAT *)stream;
     SAMPLE_FORMAT *streamEndF = ((SAMPLE_FORMAT *)stream) + length;
 
-    memset(stream, 0, length * sizeof(SAMPLE_FORMAT));
-
     for (int32 c = 0; c < CHANNEL_COUNT; ++c) {
         ChannelInfo *channel = &channels[c];
 
@@ -63,6 +61,8 @@ void AudioDeviceBase::ProcessAudioMixing(void *stream, int32 length)
 
             case CHANNEL_SFX: {
                 SAMPLE_FORMAT *sfxBuffer = &channel->samplePtr[channel->bufferPos];
+
+                PrintLog(PRINT_NORMAL, "streamF = %d, streamEndF = %d, channel->bufferPos = %i", streamF, streamEndF, channel->bufferPos);
 
                 float volL = channel->volume, volR = channel->volume;
                 if (channel->pan < 0.0f)
@@ -81,10 +81,11 @@ void AudioDeviceBase::ProcessAudioMixing(void *stream, int32 length)
 #if !RETRO_USE_ORIGINAL_CODE
                     if (!sfxBuffer) // PROTECTION FOR v5U (and other mysterious crashes 👻)
                         sample = 0;
-                    else
+                    else {
 #endif
                         sample = (sfxBuffer[1] - sfxBuffer[0]) * linearInterpolationLookup[speedPercent / LINEAR_INTERPOLATION_LOOKUP_DIVISOR]
                                  + sfxBuffer[0];
+                    }
 
                     speedPercent += channel->speed;
                     sfxBuffer += FROM_FIXED(speedPercent);
@@ -293,9 +294,6 @@ int32 RSDK::PlayStream(const char *filename, uint32 slot, uint32 startPos, uint3
     return slot;
 }
 
-#define WAV_SIG_HEADER (0x46464952) // RIFF
-#define WAV_SIG_DATA   (0x61746164) // data
-
 void RSDK::LoadSfxToSlot(char *filename, uint8 slot, uint8 plays, uint8 scope)
 {
     FileInfo info;
@@ -429,7 +427,7 @@ void RSDK::LoadSfx(char *filename, uint8 plays, uint8 scope)
     }
 
     if (id != (uint16)-1)
-        LoadSfxToSlot(filename, id, plays, scope);
+        AudioDevice::LoadSfxToSlot(filename, id, plays, scope);
 }
 
 int32 RSDK::PlaySfx(uint16 sfx, uint32 loopPoint, uint32 priority)

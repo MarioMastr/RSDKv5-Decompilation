@@ -48,10 +48,10 @@ public:
     static bool InitShaders();
     static void LoadShader(const char *fileName, bool32 linear);
 
-    static inline void ShowCursor(bool32 shown) { SDL_ShowCursor(shown); }
+    static inline void ShowCursor(bool32 shown) { if (shown) SDL_ShowCursor(); else SDL_HideCursor(); }
     static inline bool GetCursorPos(RSDK::Vector2 *pos)
     {
-        SDL_GetMouseState(&pos->x, &pos->y);
+        SDL_GetMouseState((float *)&pos->x, (float *)&pos->y);
         return true;
     };
 

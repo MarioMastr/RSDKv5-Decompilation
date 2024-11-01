@@ -3,8 +3,8 @@
 #ifndef SDL3_AUDIO_DEVICE_H
 #define SDL3_AUDIO_DEVICE_H
 
-#define LockAudioDevice() SDL_LockAudioDevice(AudioDevice::device)
-#define UnlockAudioDevice() SDL_UnlockAudioDevice(AudioDevice::device)
+#define LockAudioDevice() SDL_LockAudioStream(AudioDevice::stream)
+#define UnlockAudioDevice() SDL_UnlockAudioStream(AudioDevice::stream)
 
 namespace RSDK
 {
@@ -12,9 +12,14 @@ class AudioDevice : public AudioDeviceBase
 {
 public:
     static SDL_AudioDeviceID device;
+    static SDL_AudioStream *stream;
 
     static bool32 Init();
     static void Release();
+
+    static void ProcessAudioMixing(SDL_AudioStream *stream, int32 length, uint8 *destBuffer);
+
+    static void LoadSfxToSlot(char *filename, uint8 slot, uint8 plays, uint8 scope);
 
     static void FrameInit() {}
 
@@ -31,9 +36,7 @@ private:
 
     static uint8 contextInitialized;
 
-    static void InitAudioChannels();
-
-    static void AudioCallback(void *data, uint8 *stream, int32 len);
+    static void SDLCALL AudioCallback(void *data, SDL_AudioStream *stream, int32 len, int32 another_one);
 };
 } // namespace RSDK
 

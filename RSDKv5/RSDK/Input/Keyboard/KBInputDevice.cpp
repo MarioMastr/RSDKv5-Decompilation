@@ -11,7 +11,7 @@ int32 RSDK::SKU::buttonDownCount     = 0;
 int32 RSDK::SKU::prevButtonDownCount = 0;
 #endif
 
-#if RETRO_RENDERDEVICE_SDL2
+#if RETRO_RENDERDEVICE_SDL2 || RETRO_RENDERDEVICE_SDL3
 int32 winAPIToSDLMappings(int32 mapping)
 {
     switch (mapping) {
