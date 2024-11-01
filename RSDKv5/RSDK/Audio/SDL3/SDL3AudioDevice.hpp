@@ -11,15 +11,11 @@ namespace RSDK
 class AudioDevice : public AudioDeviceBase
 {
 public:
+    static SDL_AudioStream stream;
     static SDL_AudioDeviceID device;
-    static SDL_AudioStream *stream;
 
     static bool32 Init();
     static void Release();
-
-    static void ProcessAudioMixing(SDL_AudioStream *stream, int32 length, uint8 *destBuffer);
-
-    static void LoadSfxToSlot(char *filename, uint8 slot, uint8 plays, uint8 scope);
 
     static void FrameInit() {}
 
@@ -36,7 +32,9 @@ private:
 
     static uint8 contextInitialized;
 
-    static void SDLCALL AudioCallback(void *data, SDL_AudioStream *stream, int32 len, int32 another_one);
+    static void InitAudioChannels();
+
+    static void AudioCallback(void *data, SDL_AudioStream *stream, int32 len, int32 another_one);
 };
 } // namespace RSDK
 
