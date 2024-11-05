@@ -585,46 +585,44 @@ void RSDK::SaveSettingsINI(bool32 writeToFile)
         // GAME
         // ================
         WriteText(file, "[Game]\n");
-        if (ini) {
-            if (strcmp(iniparser_getstring(ini, "Game:dataFile", ";unknown;"), ";unknown;") != 0 || (!RETRO_USE_ORIGINAL_CODE && RETRO_REV0U)) {
-                WriteText(file, "dataFile=%s\n", iniparser_getstring(ini, "Game:dataFile", "Data.rsdk"));
-            }
+        if (strcmp(iniparser_getstring(ini, "Game:dataFile", ";unknown;"), ";unknown;") != 0 || (!RETRO_USE_ORIGINAL_CODE && RETRO_REV0U)) {
+            WriteText(file, "dataFile=%s\n", iniparser_getstring(ini, "Game:dataFile", "Data.rsdk"));
+        }
 
-            if (strcmp(iniparser_getstring(ini, "Game:devMenu", ";unknown;"), ";unknown;") != 0 || (!RETRO_USE_ORIGINAL_CODE && RETRO_REV0U))
-                WriteText(file, "devMenu=%s\n", (engine.devMenu ? "y" : "n"));
+        if (strcmp(iniparser_getstring(ini, "Game:devMenu", ";unknown;"), ";unknown;") != 0 || (!RETRO_USE_ORIGINAL_CODE && RETRO_REV0U))
+            WriteText(file, "devMenu=%s\n", (engine.devMenu ? "y" : "n"));
 
 #if !RETRO_USE_ORIGINAL_CODE
-            if (strcmp(iniparser_getstring(ini, "Game:gameLogic", ";unknown;"), ";unknown;") != 0)
-                WriteText(file, "gameLogic=%s\n", iniparser_getstring(ini, "Game:gameLogic", "Game"));
+        if (strcmp(iniparser_getstring(ini, "Game:gameLogic", ";unknown;"), ";unknown;") != 0)
+            WriteText(file, "gameLogic=%s\n", iniparser_getstring(ini, "Game:gameLogic", "Game"));
 
-            WriteText(file, "faceButtonFlip=%s\n", (customSettings.confirmButtonFlip ? "y" : "n"));
-            // WriteText(file, "confirmButtonFlip=%s\n", (customSettings.confirmButtonFlip ? "y" : "n"));
-            // WriteText(file, "xyButtonFlip=%s\n", (customSettings.xyButtonFlip ? "y" : "n"));
+        WriteText(file, "faceButtonFlip=%s\n", (customSettings.confirmButtonFlip ? "y" : "n"));
+        // WriteText(file, "confirmButtonFlip=%s\n", (customSettings.confirmButtonFlip ? "y" : "n"));
+        // WriteText(file, "xyButtonFlip=%s\n", (customSettings.xyButtonFlip ? "y" : "n"));
 
-            if (engine.devMenu)
-                WriteText(file, "enableControllerDebugging=%s\n", (customSettings.enableControllerDebugging ? "y" : "n"));
+        if (engine.devMenu)
+            WriteText(file, "enableControllerDebugging=%s\n", (customSettings.enableControllerDebugging ? "y" : "n"));
 
-            WriteText(file, "; Determines if the engine should pause when window focus is lost or not\n");
-            WriteText(file, "disableFocusPause=%s\n", (customSettings.disableFocusPause ? "y" : "n"));
+        WriteText(file, "; Determines if the engine should pause when window focus is lost or not\n");
+        WriteText(file, "disableFocusPause=%s\n", (customSettings.disableFocusPause ? "y" : "n"));
 
-            WriteText(file, "; The speed to run the game at while holding backspace. Defaults to x8 speed\n");
-            WriteText(file, "fastForwardSpeed=%d\n", engine.fastForwardSpeed);
+        WriteText(file, "; The speed to run the game at while holding backspace. Defaults to x8 speed\n");
+        WriteText(file, "fastForwardSpeed=%d\n", engine.fastForwardSpeed);
 
-            if (strcmp(iniparser_getstring(ini, "Game:username", ";unknown;"), ";unknown;") != 0)
-                WriteText(file, "username=%s\n", iniparser_getstring(ini, "Game:username", ""));
+        if (strcmp(iniparser_getstring(ini, "Game:username", ";unknown;"), ";unknown;") != 0)
+            WriteText(file, "username=%s\n", iniparser_getstring(ini, "Game:username", ""));
 
-            WriteText(file, "; if -1, the game will decide what region to use, if 0 or higher, forces a specific region\n");
-            WriteText(file, "region=%d\n", customSettings.region);
+        WriteText(file, "; if -1, the game will decide what region to use, if 0 or higher, forces a specific region\n");
+        WriteText(file, "region=%d\n", customSettings.region);
 
 #if RETRO_REV0U
-            WriteText(file, "; Determines if legacy modes are forced to load from the scripts folder instead of bytecode\n");
-            WriteText(file, "txtScripts=%s\n", (customSettings.forceScripts ? "y" : "n"));
+        WriteText(file, "; Determines if legacy modes are forced to load from the scripts folder instead of bytecode\n");
+        WriteText(file, "txtScripts=%s\n", (customSettings.forceScripts ? "y" : "n"));
 
-            WriteText(file, "; Determines game type in scripts (0 = Standalone/Original releases, 1 = Origins release)\n");
-            WriteText(file, "gameType=%d\n", engine.gameReleaseID);
+        WriteText(file, "; Determines game type in scripts (0 = Standalone/Original releases, 1 = Origins release)\n");
+        WriteText(file, "gameType=%d\n", engine.gameReleaseID);
 #endif
 #endif
-        }
 
 #if RETRO_REV02
         WriteText(file, "language=%d\n", SKU::curSKU.language);
