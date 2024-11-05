@@ -509,7 +509,7 @@ bool RenderDevice::InitGraphicsAPI()
     pixelSize.x = screens[0].size.x;
     pixelSize.y = screens[0].size.y;
 
-    SDL_SetRenderLogicalPresentation(renderer, videoSettings.pixWidth, videoSettings.pixHeight, SDL_LOGICAL_PRESENTATION_STRETCH);
+    SDL_SetRenderLogicalPresentation(renderer, videoSettings.pixWidth, videoSettings.pixHeight, SDL_LOGICAL_PRESENTATION_LETTERBOX);
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
 #if !RETRO_USE_ORIGINAL_CODE
