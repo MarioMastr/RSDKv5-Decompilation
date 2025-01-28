@@ -1,6 +1,10 @@
 project(RetroEngine)
 
-add_executable(RetroEngine ${RETRO_FILES} dependencies/mac/cocoaHelpers.mm)
+set(MACOSX_BUNDLE_ICON_FILE ${RETRO_NAME}.icns)
+set(RETRO_ICON ${CMAKE_CURRENT_SOURCE_DIR}/${RETRO_NAME}/${RETRO_NAME}.icns)
+set_source_files_properties(${RETRO_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+
+add_executable(RetroEngine MACOSX_BUNDLE ${RETRO_ICON} ${RETRO_FILES} dependencies/mac/cocoaHelpers.mm)
 
 set(RETRO_SUBSYSTEM "SDL2" CACHE STRING "The subsystem to use")
 
@@ -29,13 +33,20 @@ else()
     target_link_libraries(RetroEngine libboost)
 endif()
 
-find_package(SDL2 CONFIG)
-if(NOT ${SDL2_FOUND})
-    message(NOTICE "sdl2 not found, install sdl2 from homebrew")
-else()
-    message("found sdl2")
-    add_library(libSDL2 ALIAS SDL2::SDL2-static)
-    target_link_libraries(RetroEngine libSDL2)
+# SDL2
+#find_package(SDL2 CONFIG)
+#if(NOT ${SDL2_FOUND})
+#    message(NOTICE "sdl2 not found, install sdl2 from homebrew")
+#else()
+#    message("found sdl2")
+#    add_library(libSDL2 ALIAS SDL2::SDL2-static)
+#    target_link_libraries(RetroEngine libSDL2)
+#endif()
+
+# SDL2
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/mac/SDL2.framework")
+    message("SDL2 framework found")
+    target_link_libraries(RetroEngine "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/mac/SDL2.framework")
 endif()
 
 find_package(PkgConfig)
@@ -47,5 +58,14 @@ else()
     pkg_get_variable(THEORA_LIBRARY_DIRS theora libdir)
     target_link_libraries(RetroEngine ${THEORA_LIBRARY_DIRS}/libtheora.a)
 endif()
-
+pkg_check_modules(VORBIS REQUIRED vorbis)
+if(NOT ${THEORA_FOUND})
+    message(NOTICE "libvorbis not found, install libvorbis from homebrew")
+else()
+    message("found libvorbis")
+    pkg_get_variable(THEORA_LIBRARY_DIRS vorbis libdir)
+    target_link_libraries(RetroEngine ${THEORA_LIBRARY_DIRS}/libvorbis.a)
+endif()
 target_link_libraries(RetroEngine "-framework AppKit")
+
+
