@@ -33,20 +33,14 @@ else()
     target_link_libraries(RetroEngine libboost)
 endif()
 
-# SDL2
-#find_package(SDL2 CONFIG)
-#if(NOT ${SDL2_FOUND})
-#    message(NOTICE "sdl2 not found, install sdl2 from homebrew")
-#else()
-#    message("found sdl2")
-#    add_library(libSDL2 ALIAS SDL2::SDL2-static)
-#    target_link_libraries(RetroEngine libSDL2)
-#endif()
-
-# SDL2
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/mac/SDL2.framework")
-    message("SDL2 framework found")
-    target_link_libraries(RetroEngine "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/mac/SDL2.framework")
+# SDL2 - SDL2::SDL2 and not SDL2::SDL2-shared bc i'm personally using sdl2-compat
+find_package(SDL2 CONFIG)
+if(NOT ${SDL2_FOUND})
+    message(NOTICE "sdl2 not found, install sdl2 from homebrew")
+else()
+    message("found sdl2")
+    add_library(libSDL2 ALIAS SDL2::SDL2)
+    target_link_libraries(RetroEngine libSDL2)
 endif()
 
 find_package(PkgConfig)

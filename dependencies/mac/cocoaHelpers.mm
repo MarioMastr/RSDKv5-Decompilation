@@ -9,7 +9,7 @@ void getResourcesPath(char* buffer, int bufferSize)
 {
     @autoreleasepool
     {
-        NSString* appFolder = [NSBundle.mainBundle.executablePath stringByDeletingLastPathComponent];
+        NSString* appFolder = [NSBundle.mainBundle.bundlePath stringByDeletingLastPathComponent];
         NSString* dataFile = [appFolder stringByAppendingString:@"/Data.rsdk"];
         NSString* dataFolder = [appFolder stringByAppendingString:@"/Data"];
         NSString* settingsFile = [appFolder stringByAppendingString:@"/settings.ini"];
@@ -33,7 +33,7 @@ void getResourcesPath(char* buffer, int bufferSize)
 void getBundleResourcePath(char* buffer, int bufferSize){
     @autoreleasepool
     {
-        NSString* appFolder = NSBundle.mainBundle.executablePath;
+        NSString* appFolder = NSBundle.mainBundle.resourcePath;
         [appFolder getCString:buffer maxLength:bufferSize encoding:NSUTF8StringEncoding];
     }
 }
