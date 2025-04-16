@@ -1,3 +1,4 @@
+#include "RSDK/Core/RetroEngine.hpp"
 
 RSDK::Legacy::Face RSDK::Legacy::v4::faceBuffer[LEGACY_v4_FACEBUFFER_SIZE];
 RSDK::Legacy::Vertex RSDK::Legacy::v4::vertexBuffer[LEGACY_v4_VERTEXBUFFER_SIZE];

@@ -1,3 +1,7 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
+using namespace RSDK;
+
 #if RETRO_USE_MOD_LOADER
 // both v3 and v4 use these
 std::vector<SceneListEntry> listData;

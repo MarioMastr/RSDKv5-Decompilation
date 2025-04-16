@@ -1,5 +1,6 @@
-#ifndef SPRITE_H
-#define SPRITE_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 namespace RSDK
 {
@@ -125,5 +126,3 @@ bool32 LoadImage(const char *filename, double displayLength, double fadeSpeed, b
 #endif
 
 } // namespace RSDK
-
-#endif // SPRITE_H

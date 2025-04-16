@@ -1,5 +1,6 @@
-#ifndef STORAGE_H
-#define STORAGE_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 namespace RSDK
 {
@@ -115,5 +116,3 @@ void GarbageCollectStorage(StorageDataSets dataSet);
 #endif
 
 } // namespace RSDK
-
-#endif // STORAGE_H

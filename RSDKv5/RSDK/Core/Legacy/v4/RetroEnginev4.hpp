@@ -1,4 +1,6 @@
+#pragma once
 
+#include "RSDK/Core/RetroEngine.hpp"
 namespace Legacy
 {
 namespace v4

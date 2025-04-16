@@ -1,5 +1,4 @@
-#ifndef RETROENGINE_H
-#define RETROENGINE_H
+#pragma once
 
 // ================
 // STANDARD LIBS
@@ -727,5 +726,3 @@ void SendQuitMsg();
 } // namespace RSDK
 
 #include "Link.hpp"
-
-#endif //! RETROENGINE_H

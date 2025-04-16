@@ -1,3 +1,6 @@
+#pragma once
+
+#include "../Scene3DLegacy.hpp"
 
 namespace Legacy
 {

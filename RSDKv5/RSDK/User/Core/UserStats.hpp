@@ -1,5 +1,6 @@
-#ifndef USER_STATS_H
-#define USER_STATS_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 #include <vector>
 
@@ -70,5 +71,3 @@ inline void SetStatsEnabled(bool32 enabled) { stats->enabled = enabled; }
 
 } // namespace SKU
 } // namespace RSDK
-
-#endif // USER_STATS_H

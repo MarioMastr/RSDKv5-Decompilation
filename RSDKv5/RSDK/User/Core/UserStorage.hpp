@@ -1,5 +1,6 @@
-#ifndef USER_STORAGE_H
-#define USER_STORAGE_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 namespace RSDK
 {

@@ -1,3 +1,8 @@
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
+
+using namespace RSDK;
 using ShaderEntry = ShaderEntryBase;
 
 class RenderDevice : public RenderDeviceBase

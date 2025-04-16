@@ -1,3 +1,6 @@
+#pragma once
+
+#include "../DrawingLegacy.hpp"
 
 namespace Legacy
 {

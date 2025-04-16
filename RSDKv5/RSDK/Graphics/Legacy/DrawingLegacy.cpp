@@ -1,4 +1,4 @@
-
+#include "RSDK/Core/RetroEngine.hpp"
 
 #include "v3/DrawingLegacyv3.cpp"
 #include "v4/DrawingLegacyv4.cpp"

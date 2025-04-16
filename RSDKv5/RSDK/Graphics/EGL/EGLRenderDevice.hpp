@@ -1,3 +1,9 @@
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
+
+using namespace RSDK;
+
 class RenderDevice : public RenderDeviceBase
 {
 public:

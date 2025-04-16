@@ -1,5 +1,6 @@
-#ifndef ANIMATION_H
-#define ANIMATION_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 namespace RSDK
 {
@@ -195,5 +196,3 @@ inline void ClearSpriteAnimations()
 #endif
 
 } // namespace RSDK
-
-#endif

@@ -1,3 +1,7 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
+using namespace RSDK;
+
 uint8 AudioDevice::contextInitialized;
 oboe::Result AudioDevice::status = oboe::Result::OK;
 oboe::AudioStream *AudioDevice::stream;

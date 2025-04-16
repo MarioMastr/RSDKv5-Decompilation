@@ -500,11 +500,11 @@ bool32 RSDK::SKU::UserDB::RemoveRow(uint32 row)
 {
     if (row < rowCount) {
         UserDBRow *entry = &rows[row];
-        memset(entry, 0, sizeof(UserDBRow));
+        memset((void*)entry, 0, sizeof(UserDBRow));
 
         int32 id = (int32)(rowCount - row - 1);
-        memcpy(entry, &entry[1], id * sizeof(UserDBRow));
-        memset(&entry[id + 1], 0, sizeof(UserDBRow));
+        memcpy((void*)entry, &entry[1], id * sizeof(UserDBRow));
+        memset((void*)&entry[id + 1], 0, sizeof(UserDBRow));
 
         --rowCount;
         valid = true;

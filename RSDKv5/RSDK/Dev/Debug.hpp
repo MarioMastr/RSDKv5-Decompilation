@@ -1,5 +1,6 @@
-#ifndef DEBUG_H
-#define DEBUG_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 // These being different sizes will surely cause issues if more then VIEWVAR_LIST_COUNT values are set
 // But that's how the code is in the original so what can ya do
@@ -143,7 +144,5 @@ void DevMenu_PlayerSelectMenu();
 
 void OpenDevMenu();
 void CloseDevMenu();
-
-#endif
 
 } // namespace RSDK

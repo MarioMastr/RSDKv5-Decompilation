@@ -1,3 +1,7 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
+using namespace RSDK;
+
 #ifdef _INTELLISENSE
 #ifdef _INTELLISENSE_NX
 #undef __unix__

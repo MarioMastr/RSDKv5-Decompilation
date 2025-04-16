@@ -1,5 +1,6 @@
-#ifndef DRAWING_H
-#define DRAWING_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 namespace RSDK
 {
@@ -423,5 +424,3 @@ inline void ClearGfxSurfaces()
 #endif
 
 } // namespace RSDK
-
-#endif // !DRAWING_H

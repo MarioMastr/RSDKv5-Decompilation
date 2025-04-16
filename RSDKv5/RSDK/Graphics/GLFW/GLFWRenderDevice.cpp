@@ -1,3 +1,7 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
+using namespace RSDK;
+
 #ifndef _GLVERSION
 #define _GLVERSION 20
 //#define _GLVERSION 33

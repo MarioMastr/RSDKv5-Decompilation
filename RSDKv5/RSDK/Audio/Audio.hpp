@@ -1,5 +1,6 @@
-#ifndef AUDIO_H
-#define AUDIO_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 namespace RSDK
 {
@@ -204,5 +205,3 @@ void ClearGlobalSfx();
 #endif
 
 } // namespace RSDK
-
-#endif

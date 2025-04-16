@@ -75,61 +75,39 @@ endif()
 
 set_target_properties(RetroEngine PROPERTIES OUTPUT_NAME ${RETRO_OUTPUT_NAME})
 
-if(COMPILE_OGG)
-    set(OGG_DIR dependencies/${DEP_PATH}/libogg)
-    add_library(
-        libogg
-        STATIC
-        ${OGG_DIR}/src/bitwise.c
-        ${OGG_DIR}/src/framing.c
+include(FetchContent)
+
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+FetchContent_Declare(libogg URL https://ftp.osuosl.org/pub/xiph/releases/ogg/libogg-1.3.5.zip)
+FetchContent_MakeAvailable(libogg)
+
+FetchContent_Declare(libtheora URL https://downloads.xiph.org/releases/theora/libtheora-1.2.0.tar.gz)
+FetchContent_MakeAvailable(libtheora)
+
+file(GLOB THEORA_SOURCES "${libtheora_SOURCE_DIR}/lib/*.c")
+
+add_library(libtheora STATIC ${THEORA_SOURCES})
+set_target_properties(libtheora
+    PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${libtheora_SOURCE_DIR}/include"
+    WORKING_DIRECTORY "${libtheora_BUILD_DIR}"
+)
+target_include_directories(libtheora PRIVATE ${libtheora_SOURCE_DIR}/include ${libogg_SOURCE_DIR}/include)
+
+if (RETRO_SUBSYSTEM STREQUAL "SDL2")
+    FetchContent_Declare(
+        SDL2
+        URL https://github.com/libsdl-org/SDL/releases/download/release-2.32.4/SDL2-2.32.4.zip
+        PATCH_COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/mac/SDL_cocoawindow.patch # displayp3
     )
-
-    target_compile_options(libogg PRIVATE ${OGG_FLAGS})
-
-    target_include_directories(libogg PRIVATE ${OGG_DIR}/include)
-    target_include_directories(RetroEngine PRIVATE ${OGG_DIR}/include)
-    target_link_libraries(RetroEngine libogg)
+    FetchContent_MakeAvailable(SDL2)
+    
+    add_dependencies(RetroEngine SDL2::SDL2-static)
+    target_link_libraries(RetroEngine SDL2::SDL2-static)
 endif()
 
-if(COMPILE_THEORA)
-    set(THEORA_DIR dependencies/android/libtheora)
-
-    add_library(libtheora STATIC
-        ${THEORA_DIR}/lib/analyze.c
-        ${THEORA_DIR}/lib/apiwrapper.c
-        ${THEORA_DIR}/lib/bitpack.c
-        ${THEORA_DIR}/lib/cpu.c
-        ${THEORA_DIR}/lib/decapiwrapper.c
-        ${THEORA_DIR}/lib/decinfo.c
-        ${THEORA_DIR}/lib/decode.c
-        ${THEORA_DIR}/lib/dequant.c
-        ${THEORA_DIR}/lib/encapiwrapper.c
-        ${THEORA_DIR}/lib/encfrag.c
-        ${THEORA_DIR}/lib/encinfo.c
-        ${THEORA_DIR}/lib/encode.c
-        ${THEORA_DIR}/lib/encoder_disabled.c
-        ${THEORA_DIR}/lib/enquant.c
-        ${THEORA_DIR}/lib/fdct.c
-        ${THEORA_DIR}/lib/fragment.c
-        ${THEORA_DIR}/lib/huffdec.c
-        ${THEORA_DIR}/lib/huffenc.c
-        ${THEORA_DIR}/lib/idct.c
-        ${THEORA_DIR}/lib/info.c
-        ${THEORA_DIR}/lib/internal.c
-        ${THEORA_DIR}/lib/mathops.c
-        ${THEORA_DIR}/lib/mcenc.c
-        ${THEORA_DIR}/lib/quant.c
-        ${THEORA_DIR}/lib/rate.c
-        ${THEORA_DIR}/lib/state.c
-        ${THEORA_DIR}/lib/tokenize.c
-    )
-
-    target_compile_options(libtheora PRIVATE ${THEORA_FLAGS})
-
-    target_include_directories(libtheora PRIVATE ${THEORA_DIR}/include ${OGG_DIR}/include)
-    target_include_directories(RetroEngine PRIVATE ${THEORA_DIR}/include)
-    target_link_libraries(RetroEngine libtheora)
-endif()
+add_dependencies(RetroEngine Ogg::ogg libtheora)
+target_link_libraries(RetroEngine Ogg::ogg libtheora)
 
 target_include_directories(RetroEngine PRIVATE
     RSDKv5/

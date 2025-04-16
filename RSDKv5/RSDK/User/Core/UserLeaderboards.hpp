@@ -1,5 +1,6 @@
-#ifndef USER_LEADERBOARDS_H
-#define USER_LEADERBOARDS_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 namespace RSDK
 {
@@ -186,5 +187,3 @@ LeaderboardEntry *ReadLeaderboardEntry(int32 entryID);
 
 } // namespace SKU
 } // namespace RSDK
-
-#endif // USER_LEADERBOARDS_H

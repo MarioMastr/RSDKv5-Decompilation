@@ -1,3 +1,7 @@
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
+
 #define LockAudioDevice()   pthread_mutex_lock(&AudioDevice::mutex);
 #define UnlockAudioDevice() pthread_mutex_unlock(&AudioDevice::mutex);
 

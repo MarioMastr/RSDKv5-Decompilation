@@ -1,5 +1,6 @@
-#ifndef USER_PRESENCE_H
-#define USER_PRESENCE_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 namespace RSDK
 {
@@ -51,5 +52,3 @@ inline void SetPresence(int32 id, String *message) { richPresence->SetPresence(i
 
 } // namespace SKU
 } // namespace RSDK
-
-#endif // USER_PRESENCE_H

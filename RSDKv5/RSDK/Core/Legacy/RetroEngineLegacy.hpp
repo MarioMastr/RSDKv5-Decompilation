@@ -1,3 +1,6 @@
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 #include "v3/RetroEnginev3.hpp"
 #include "v4/RetroEnginev4.hpp"

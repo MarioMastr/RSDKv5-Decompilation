@@ -1,5 +1,6 @@
-#ifndef MOD_API_H
-#define MOD_API_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 #if RETRO_USE_MOD_LOADER
 #include <vector>
@@ -561,5 +562,3 @@ public:
 
 }; // namespace fs
 #endif
-
-#endif // !MOD_API_H

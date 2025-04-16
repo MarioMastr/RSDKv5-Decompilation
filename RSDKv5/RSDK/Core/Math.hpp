@@ -1,5 +1,6 @@
-#ifndef MATH_H
-#define MATH_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 namespace RSDK
 {
@@ -142,5 +143,3 @@ inline int32 RandSeeded(int32 min, int32 max, int32 *randSeed)
 }
 
 } // namespace RSDK
-
-#endif // !MATH_H

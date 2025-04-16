@@ -1,3 +1,7 @@
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
+
 #define LockAudioDevice()
 #define UnlockAudioDevice()
 

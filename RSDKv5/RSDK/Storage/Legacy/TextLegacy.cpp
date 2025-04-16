@@ -1,3 +1,4 @@
+#include "RSDK/Core/RetroEngine.hpp"
 
 RSDK::Legacy::TextMenu RSDK::Legacy::gameMenu[LEGACY_TEXTMENU_COUNT];
 int32 RSDK::Legacy::textMenuSurfaceNo = 0;

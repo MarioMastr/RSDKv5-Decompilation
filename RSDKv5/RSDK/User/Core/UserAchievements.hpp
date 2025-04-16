@@ -1,5 +1,6 @@
-#ifndef USER_ACHIEVEMENTS_H
-#define USER_ACHIEVEMENTS_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 #include <vector>
 #include <string>
@@ -136,5 +137,3 @@ extern std::vector<int32> achievementStack;
 // End Dummy Achievement code
 
 } // namespace RSDK
-
-#endif // USER_ACHIEVEMENTS_H

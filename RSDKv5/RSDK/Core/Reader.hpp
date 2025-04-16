@@ -1,5 +1,6 @@
-#ifndef READER_H
-#define READER_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 #if RETRO_RENDERDEVICE_SDL2 || RETRO_AUDIODEVICE_SDL2 || RETRO_INPUTDEVICE_SDL2
 #define FileIO                                          SDL_RWops
@@ -447,5 +448,3 @@ inline void ClearDataFiles()
 }
 
 } // namespace RSDK
-
-#endif

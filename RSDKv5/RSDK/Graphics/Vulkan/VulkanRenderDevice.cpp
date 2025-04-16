@@ -1,3 +1,7 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
+using namespace RSDK;
+
 #ifdef VK_INTELLISENSE
 #include "RetroEngine.hpp"
 #include "VulkanRenderDevice.hpp"

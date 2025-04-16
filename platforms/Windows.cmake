@@ -9,38 +9,6 @@ set(DEP_PATH windows)
 
 message(NOTICE "configuring for the " ${RETRO_SUBSYSTEM} " subsystem")
 
-find_package(Ogg CONFIG)
-
-if(NOT ${Ogg_FOUND})
-    set(COMPILE_OGG TRUE)
-    message(NOTICE "libogg not found, attempting to build from source")
-else()
-    message("found libogg")
-    add_library(libogg ALIAS Ogg::ogg)
-    target_link_libraries(RetroEngine libogg)
-endif()
-
-# i don't like this but it's what's on vcpkg so
-find_package(unofficial-theora CONFIG)
-
-if(NOT unofficial-theora_FOUND)
-    message(NOTICE "could not find libtheora from unofficial-theora, attempting to find through Theora")
-    find_package(Theora CONFIG)
-
-    if(NOT Theora_FOUND)
-        message("could not find libtheora, attempting to build manually")
-        set(COMPILE_THEORA TRUE)
-    else()
-        message("found libtheora")
-        add_library(libtheora ALIAS Theora::theora) # my best guess
-        target_link_libraries(RetroEngine libtheora)
-    endif()
-else()
-    message("found libtheora")
-    add_library(libtheora ALIAS unofficial::theora::theora)
-    target_link_libraries(RetroEngine libtheora)
-endif()
-
 if(RETRO_SUBSYSTEM STREQUAL "DX9")
     target_link_libraries(RetroEngine
         d3d9
@@ -96,11 +64,6 @@ elseif(RETRO_SUBSYSTEM STREQUAL "VK")
         Vulkan::Vulkan
     )
 elseif(RETRO_SUBSYSTEM STREQUAL "SDL2")
-    find_package(SDL2 CONFIG REQUIRED) # i ain't setting this up all the way
-    target_link_libraries(RetroEngine 
-        $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
-        $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
-    )
 else()
     message(FATAL_ERROR "RETRO_SUBSYSTEM must be one of DX9, DX11, OGL, VK, or SDL2")
 endif()

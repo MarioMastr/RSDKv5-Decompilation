@@ -1,5 +1,6 @@
-#ifndef VIDEO_H
-#define VIDEO_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 namespace RSDK
 {
@@ -26,5 +27,3 @@ bool32 LoadVideo(const char *filename, double startDelay, bool32 (*skipCallback)
 void ProcessVideo();
 
 } // namespace RSDK
-
-#endif // VIDEO_H

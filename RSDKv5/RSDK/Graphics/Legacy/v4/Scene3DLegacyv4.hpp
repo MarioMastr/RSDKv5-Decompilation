@@ -1,3 +1,8 @@
+#pragma once
+
+#include "../Scene3DLegacy.hpp"
+
+using namespace RSDK;
 
 namespace Legacy
 {

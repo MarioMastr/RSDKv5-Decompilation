@@ -1,3 +1,9 @@
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
+
+using namespace RSDK;
+
 const auto _wapiShowCursor   = ShowCursor;
 const auto _wapiGetCursorPos = GetCursorPos;
 

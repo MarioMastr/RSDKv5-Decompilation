@@ -1,4 +1,4 @@
-
+#include "RSDK/Core/RetroEngine.hpp"
 
 RSDK::Legacy::AnimationFile RSDK::Legacy::animationFileList[LEGACY_ANIFILE_COUNT];
 int32 RSDK::Legacy::animationFileCount = 0;

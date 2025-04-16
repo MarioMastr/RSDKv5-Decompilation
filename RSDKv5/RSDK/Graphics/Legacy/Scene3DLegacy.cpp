@@ -1,3 +1,5 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
 #include "v3/Scene3DLegacyv3.cpp"
 #include "v4/Scene3DLegacyv4.cpp"
 

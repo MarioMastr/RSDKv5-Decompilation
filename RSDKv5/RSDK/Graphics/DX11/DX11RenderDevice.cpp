@@ -1,4 +1,7 @@
+#include "RSDK/Core/RetroEngine.hpp"
 #include "resource.h"
+
+using namespace RSDK;
 
 #if !RETRO_USE_ORIGINAL_CODE
 #include <D3Dcompiler.h>

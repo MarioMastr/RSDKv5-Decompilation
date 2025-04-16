@@ -1,3 +1,7 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
+using namespace RSDK;
+
 uint8 AudioDevice::contextInitialized;
 PaStream *AudioDevice::stream;
 

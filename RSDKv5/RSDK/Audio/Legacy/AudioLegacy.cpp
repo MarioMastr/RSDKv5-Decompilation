@@ -1,4 +1,6 @@
+#include "RSDK/Core/RetroEngine.hpp"
 
+using namespace RSDK;
 
 int32 RSDK::Legacy::globalSFXCount = 0;
 int32 RSDK::Legacy::stageSFXCount  = 0;

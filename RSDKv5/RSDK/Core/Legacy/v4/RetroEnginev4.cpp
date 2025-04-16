@@ -1,4 +1,6 @@
-#include "RetroEnginev4.hpp"
+#include "RSDK/Core/RetroEngine.hpp"
+
+using namespace RSDK::Legacy;
 
 bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
 {

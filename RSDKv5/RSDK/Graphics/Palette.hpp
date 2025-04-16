@@ -1,5 +1,6 @@
-#ifndef PALETTE_H
-#define PALETTE_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 namespace RSDK
 {
@@ -114,5 +115,3 @@ void SetPaletteFade(uint8 destBankID, uint8 srcBankA, uint8 srcBankB, int16 blen
 #endif
 
 } // namespace RSDK
-
-#endif

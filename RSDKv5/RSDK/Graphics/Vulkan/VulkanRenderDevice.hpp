@@ -1,6 +1,10 @@
 // TODO: VULKAN_USE_GLFW and other stuff
 // i'm not gonna worry about those yet
 
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
+
 class RenderDevice : public RenderDeviceBase
 {
 

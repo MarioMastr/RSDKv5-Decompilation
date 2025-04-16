@@ -1,5 +1,6 @@
-#ifndef LINK_H
-#define LINK_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 namespace RSDK
 {
@@ -579,5 +580,3 @@ private:
 };
 
 } // namespace RSDK
-
-#endif

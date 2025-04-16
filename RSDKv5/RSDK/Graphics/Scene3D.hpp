@@ -1,5 +1,6 @@
-#ifndef SCENE3D_H
-#define SCENE3D_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 namespace RSDK
 {
@@ -242,5 +243,3 @@ inline void Clear3DScenes()
 #endif
 
 } // namespace RSDK
-
-#endif

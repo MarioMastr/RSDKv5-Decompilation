@@ -1,3 +1,4 @@
+#include "RSDK/Core/RetroEngine.hpp"
 
 int32 RSDK::Legacy::AddGraphicsFile(const char *filePath)
 {

@@ -1,5 +1,6 @@
-#ifndef TEXT_H
-#define TEXT_H
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
 
 namespace RSDK
 {
@@ -220,5 +221,3 @@ bool32 SplitStringList(String *splitStrings, String *stringList, int32 startStri
 #endif
 
 } // namespace RSDK
-
-#endif

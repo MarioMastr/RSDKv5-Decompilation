@@ -1,4 +1,4 @@
-
+#include "RSDK/Core/RetroEngine.hpp"
 
 void RSDK::Legacy::v4::DrawObjectList(int32 group)
 {
