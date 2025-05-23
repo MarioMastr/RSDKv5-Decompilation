@@ -423,4 +423,3 @@ void InitUserDirectory();
 } // namespace SKU
 } // namespace RSDK
 
-#endif
