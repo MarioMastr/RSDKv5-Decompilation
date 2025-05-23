@@ -1,8 +1,9 @@
+#pragma once
 
+#include <RSDK/Core/RetroEngine.hpp>
 namespace SKU
 {
-
-struct InputDeviceSDL : InputDevice {
+struct InputDeviceSDL : RSDK::InputDevice {
     void UpdateInput();
     void ProcessInput(int32 controllerID);
     void CloseDevice();

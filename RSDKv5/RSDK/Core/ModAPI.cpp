@@ -253,9 +253,9 @@ void RSDK::LoadModSettings()
 
         if (mod->redirectSaveRAM) {
             if (SKU::userFileDir[0])
-                sprintf(customUserFileDir, "%smods/%s/", SKU::userFileDir, mod->folderName.c_str());
+                snprintf(customUserFileDir, sizeof(customUserFileDir), "%smods/%s/", SKU::userFileDir, mod->folderName.c_str());
             else
-                sprintf(customUserFileDir, "mods/%s/", mod->folderName.c_str());
+                snprintf(customUserFileDir, sizeof(customUserFileDir), "mods/%s/", mod->folderName.c_str());
         }
 
         modSettings.redirectSaveRAM |= mod->redirectSaveRAM ? 1 : 0;

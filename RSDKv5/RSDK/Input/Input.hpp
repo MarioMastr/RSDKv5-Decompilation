@@ -1,5 +1,6 @@
-#ifndef INPUT_H
-#define INPUT_H
+#pragma once
+
+#include <RSDK/Core/RetroEngine.hpp>
 
 namespace RSDK
 {
@@ -784,5 +785,3 @@ inline void GetUnknownInputValue(int32 inputSlot, int32 type, int32 *value)
 #endif
 
 } // namespace RSDK
-
-#endif // !INPUT_H

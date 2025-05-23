@@ -37,9 +37,9 @@ void RSDK::PrintLog(int32 mode, const char *message, ...)
 
         vsnprintf(outputString, sizeof(outputString), message, args);
         if (useEndLine)
-            sprintf(outputString, "%.*s\n", (int32)sizeof(outputString) - 1, outputString);
+            snprintf(outputString, sizeof(outputString), "%.*s\n", (int32)sizeof(outputString) - 1, outputString);
         else
-            sprintf(outputString, "%.*s", (int32)sizeof(outputString) - 1, outputString);
+            snprintf(outputString, sizeof(outputString), "%.*s", (int32)sizeof(outputString) - 1, outputString);
         va_end(args);
 
 #if RETRO_REV02

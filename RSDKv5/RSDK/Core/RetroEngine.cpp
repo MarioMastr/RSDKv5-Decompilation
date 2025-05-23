@@ -1286,7 +1286,7 @@ void RSDK::InitGameLink()
             strcpy_s(buffer, 0x100, gameLogicName);
 #elif RETRO_PLATFORM == RETRO_OSX
             getBundleResourcePath(buffer, sizeof(buffer));
-            sprintf(buffer, "%s/%s", buffer, gameLogicName);
+            snprintf(buffer, sizeof(buffer), "%s/%s", buffer, gameLogicName);
 #else
             sprintf(buffer, "%s%s", SKU::userFileDir, gameLogicName);
 #endif

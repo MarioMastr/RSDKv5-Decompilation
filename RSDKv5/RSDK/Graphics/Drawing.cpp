@@ -357,7 +357,7 @@ void RSDK::GetDisplayInfo(int32 *displayID, int32 *width, int32 *height, int32 *
             *refreshRate = displayRefresh;
 
         if (text)
-            sprintf(text, "%ix%i @%iHz", displayWidth, displayHeight, displayRefresh);
+            snprintf(text, sizeof(text), "%ix%i @%iHz", displayWidth, displayHeight, displayRefresh);
     }
     else { // displayID 0 == "default fullscreen size"
         if (width)
@@ -370,7 +370,7 @@ void RSDK::GetDisplayInfo(int32 *displayID, int32 *width, int32 *height, int32 *
             *refreshRate = 0;
 
         if (text)
-            sprintf(text, "%s", "DEFAULT");
+            snprintf(text, sizeof(text), "%s", "DEFAULT");
     }
 }
 

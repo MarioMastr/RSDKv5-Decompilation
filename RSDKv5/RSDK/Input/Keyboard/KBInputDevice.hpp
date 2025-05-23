@@ -1,10 +1,12 @@
+#pragma once
 
+#include <RSDK/Core/RetroEngine.hpp>
 namespace SKU
 {
 
 extern int32 keyState[PLAYER_COUNT];
 
-struct InputDeviceKeyboard : InputDevice {
+struct InputDeviceKeyboard : RSDK::InputDevice {
     void UpdateInput();
     void ProcessInput(int32 controllerID);
 
