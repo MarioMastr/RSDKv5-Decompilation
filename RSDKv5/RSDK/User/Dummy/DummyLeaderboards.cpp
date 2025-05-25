@@ -1,7 +1,9 @@
-#include <string>
+#include "RSDK/Core/RetroEngine.hpp"
+
+using namespace RSDK;
 
 #if RETRO_REV02
-void DummyLeaderboards::FillLeaderboardEntries(RSDK::SKU::LeaderboardLoadInfo *info)
+void SKU::DummyLeaderboards::FillLeaderboardEntries(RSDK::SKU::LeaderboardLoadInfo *info)
 {
     const char *dummyNames[] = { "ORCIHILLARY124",      "AUCTORJOLIE521",       "SENECTUSFLORENCE789", "MAGNAAVRAM503",       "SITVERNON320",
                                  "DUICHRISTEN429",      "NULLAKERMIT649",       "INTEGERGEORGE708",    "HENDRERITDREW443",    "UTULYSSES507",
@@ -64,7 +66,7 @@ void DummyLeaderboards::FillLeaderboardEntries(RSDK::SKU::LeaderboardLoadInfo *i
     }
 }
 
-void DummyLeaderboards::FinishLeaderboardFetch(DummyLeaderboardCallback *callback)
+void SKU::DummyLeaderboards::FinishLeaderboardFetch(DummyLeaderboardCallback *callback)
 {
     this->status = SKU::GetAPIValue(SKU::GetAPIValueID("SYSTEM_LEADERBOARD_STATUS", 0));
 
@@ -96,13 +98,13 @@ void DummyLeaderboards::FinishLeaderboardFetch(DummyLeaderboardCallback *callbac
     }
 }
 
-void DummyLeaderboards::FinishLeaderboardLoad(DummyLeaderboardCallback *callback)
+void SKU::DummyLeaderboards::FinishLeaderboardLoad(DummyLeaderboardCallback *callback)
 {
     FillLeaderboardEntries(callback->info);
     entryInfo.Setup();
 }
 
-void DummyLeaderboards::FetchLeaderboard(LeaderboardID *leaderboard, bool32 isUser)
+void SKU::DummyLeaderboards::FetchLeaderboard(LeaderboardID *leaderboard, bool32 isUser)
 {
     if (!leaderboard)
         return;
@@ -133,7 +135,7 @@ void DummyLeaderboards::FetchLeaderboard(LeaderboardID *leaderboard, bool32 isUs
     }
 }
 
-void DummyLeaderboards::LoadLeaderboards(RSDK::SKU::LeaderboardLoadInfo *info)
+void SKU::DummyLeaderboards::LoadLeaderboards(RSDK::SKU::LeaderboardLoadInfo *info)
 {
     for (int32 i = 0; i < info->avail.length; ++i) {
         info->entries[i].status     = STATUS_CONTINUE;
@@ -146,7 +148,7 @@ void DummyLeaderboards::LoadLeaderboards(RSDK::SKU::LeaderboardLoadInfo *info)
     cb->info                     = info;
 }
 
-void DummyLeaderboards::TrackScore(LeaderboardID *leaderboard, int32 score, void (*callback)(bool32 success, int32 rank))
+void SKU::DummyLeaderboards::TrackScore(LeaderboardID *leaderboard, int32 score, void (*callback)(bool32 success, int32 rank))
 {
     if (!leaderboard)
         return;

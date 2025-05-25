@@ -1,8 +1,12 @@
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
+
 #if RETRO_REV02
 
 // This is the "dummy" struct, it serves as the base in the event a suitable API isn't loaded (such as in this decomp)
 // This struct should never be removed, other structs such as "SteamUserCore" would be added and "userCore" would be set to that instead
-struct DummyCore : UserCore {
+struct DummyCore : RSDK::SKU::UserCore {
     DummyCore()
     {
         // are sonic mania plus features enabled?
@@ -57,8 +61,8 @@ struct DummyCore : UserCore {
     bool32 ShowExtensionOverlay(int32 overlay)
     {
         switch (overlay) {
-            default: PrintLog(PRINT_POPUP, "Show Unknown Extension Overlay: %d", overlay); break;
-            case 0: PrintLog(PRINT_POPUP, "Show Extension Overlay: %d (Plus Upsell Screen)", overlay); break;
+            default: PrintLog(RSDK::PRINT_POPUP, "Show Unknown Extension Overlay: %d", overlay); break;
+            case 0: PrintLog(RSDK::PRINT_POPUP, "Show Extension Overlay: %d (Plus Upsell Screen)", overlay); break;
         }
 
         return false;

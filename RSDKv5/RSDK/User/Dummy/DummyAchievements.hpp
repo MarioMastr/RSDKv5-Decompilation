@@ -1,10 +1,13 @@
-#include <vector>
-#include <string>
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
+
+using namespace RSDK;
 
 #if RETRO_REV02
 // This is the "dummy" struct, it serves as the base in the event a suitable API isn't loaded (such as in this decomp)
 // This struct should never be removed, other structs such as "SteamAchievements" would be added and "achievements" would be set to that instead
-struct DummyAchievements : UserAchievements {
+struct DummyAchievements : SKU::UserAchievements {
     DummyAchievements() {}
 
 #if RETRO_VER_EGS || RETRO_USE_DUMMY_ACHIEVEMENTS
@@ -16,6 +19,6 @@ struct DummyAchievements : UserAchievements {
     int32 GetNextAchievementID();
     void RemoveLastAchievementID();
 #endif
-    void TryUnlockAchievement(AchievementID *id);
+    void TryUnlockAchievement(SKU::AchievementID *id);
 };
 #endif

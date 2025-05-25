@@ -1,5 +1,11 @@
+#pragma once
+
+#include "RSDK/Core/RetroEngine.hpp"
+
+using namespace RSDK;
+
 #if RETRO_REV02
-void DummyAchievements::TryUnlockAchievement(AchievementID *id)
+void SKU::DummyAchievements::TryUnlockAchievement(AchievementID *id)
 {
     if (enabled) {
         PrintLog(PRINT_NORMAL, "DUMMY TryUnlockAchievement(%s)", id->identifier);
@@ -27,7 +33,7 @@ void DummyAchievements::TryUnlockAchievement(AchievementID *id)
     }
 }
 
-void DummyAchievements::SetAchievementNames(String **names, int32 count)
+void SKU::DummyAchievements::SetAchievementNames(String **names, int32 count)
 {
     if (count <= 0)
         return;
@@ -42,12 +48,12 @@ void DummyAchievements::SetAchievementNames(String **names, int32 count)
     }
 }
 
-String *DummyAchievements::GetAchievementString(String *string)
+String *SKU::DummyAchievements::GetAchievementString(String *string)
 {
     InitString(string, "Achievement!", 0);
     return string;
 }
-String *DummyAchievements::GetAchievementName(String *name, uint32 id)
+String *SKU::DummyAchievements::GetAchievementName(String *name, uint32 id)
 {
 #if !RETRO_VER_EGS
     id--;
@@ -57,7 +63,7 @@ String *DummyAchievements::GetAchievementName(String *name, uint32 id)
     return name;
 }
 
-int32 DummyAchievements::GetNextAchievementID()
+int32 SKU::DummyAchievements::GetNextAchievementID()
 {
     if (achievementStack.size() > 0)
         return achievementStack[0] + 1;
@@ -65,7 +71,7 @@ int32 DummyAchievements::GetNextAchievementID()
         return 0;
 }
 
-void DummyAchievements::RemoveLastAchievementID()
+void SKU::DummyAchievements::RemoveLastAchievementID()
 {
     if (achievementStack.size() > 0)
         achievementStack.erase(achievementStack.begin());

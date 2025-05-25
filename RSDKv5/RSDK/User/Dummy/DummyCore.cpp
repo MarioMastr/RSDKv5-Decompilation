@@ -1,5 +1,9 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
+using namespace RSDK;
+
 #if RETRO_REV02
-DummyCore *dummyCore = NULL;
+SKU::DummyCore *dummyCore = NULL;
 
 uint32 GetAPIValueID(const char *identifier, int32 charIndex)
 {
@@ -36,11 +40,11 @@ int32 GetAPIValue(uint32 id)
 
         case 0x4205582D: return 120; // SYSTEM_LEADERBOARD_LOAD_TIME
 
-        case 0xDEF3F8B5: return STATUS_OK; // SYSTEM_LEADERBOARD_STATUS
+        case 0xDEF3F8B5: return SKU::STATUS_OK; // SYSTEM_LEADERBOARD_STATUS
 
-        case 0x5AD68EAB: return STATUS_OK; // SYSTEM_USERSTORAGE_AUTH_STATUS
+        case 0x5AD68EAB: return SKU::STATUS_OK; // SYSTEM_USERSTORAGE_AUTH_STATUS
 
-        case 0x884E705A: return STATUS_OK; // SYSTEM_USERSTORAGE_STORAGE_STATUS
+        case 0x884E705A: return SKU::STATUS_OK; // SYSTEM_USERSTORAGE_STORAGE_STATUS
 
         case 0xBDF4E94A: return 30; // SYSTEM_USERSTORAGE_AUTH_TIME
 
@@ -56,8 +60,10 @@ int32 GetAPIValue(uint32 id)
     return 0;
 }
 
-DummyCore *InitDummyCore()
+SKU::DummyCore *InitDummyCore()
 {
+
+    using namespace RSDK::SKU;
     // Initalize API subsystems
     DummyCore *core = new DummyCore;
 
@@ -88,7 +94,7 @@ DummyCore *InitDummyCore()
 
 #if RETRO_REV02
 const char *userValueNames[8] = { "Ext <PLUS>" };
-void DummyCore::StageLoad()
+void SKU::DummyCore::StageLoad()
 {
     UserCore::StageLoad();
 
@@ -100,14 +106,14 @@ void DummyCore::StageLoad()
 #endif
 }
 
-bool32 DummyCore::CheckFocusLost() { return focusState != 0; }
+bool32 SKU::DummyCore::CheckFocusLost() { return focusState != 0; }
 
-int32 DummyCore::GetUserLanguage() { return GetAPIValue(GetAPIValueID("SYSTEM_LANGUAGE", 0)); }
-int32 DummyCore::GetUserRegion() { return GetAPIValue(GetAPIValueID("SYSTEM_REGION", 0)); }
-int32 DummyCore::GetUserPlatform() { return GetAPIValue(GetAPIValueID("SYSTEM_PLATFORM", 0)); }
-bool32 DummyCore::GetConfirmButtonFlip() { return GetAPIValue(GetAPIValueID("SYSTEM_CONFIRM_FLIP", 0)); }
+int32 SKU::DummyCore::GetUserLanguage() { return GetAPIValue(GetAPIValueID("SYSTEM_LANGUAGE", 0)); }
+int32 SKU::DummyCore::GetUserRegion() { return GetAPIValue(GetAPIValueID("SYSTEM_REGION", 0)); }
+int32 SKU::DummyCore::GetUserPlatform() { return GetAPIValue(GetAPIValueID("SYSTEM_PLATFORM", 0)); }
+bool32 SKU::DummyCore::GetConfirmButtonFlip() { return GetAPIValue(GetAPIValueID("SYSTEM_CONFIRM_FLIP", 0)); }
 
-void DummyCore::LaunchManual()
+void SKU::DummyCore::LaunchManual()
 {
     // LaunchManual() just opens the mania manual URL, thats it
 #if (RETRO_RENDERDEVICE_SDL2 || RETRO_AUDIODEVICE_SDL2 || RETRO_INPUTDEVICE_SDL2)
@@ -122,9 +128,9 @@ void DummyCore::LaunchManual()
     PrintLog(PRINT_NORMAL, "EMPTY LaunchManual()");
 #endif
 }
-void DummyCore::ExitGame() { RenderDevice::isRunning = false; }
+void SKU::DummyCore::ExitGame() { RenderDevice::isRunning = false; }
 
-int32 DummyCore::GetDefaultGamepadType()
+int32 SKU::DummyCore::GetDefaultGamepadType()
 {
 #if RETRO_REV02
     int32 platform = curSKU.platform;
