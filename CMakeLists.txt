@@ -93,6 +93,7 @@ set_target_properties(libtheora
     PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${libtheora_SOURCE_DIR}/include"
     WORKING_DIRECTORY "${libtheora_BUILD_DIR}"
+    PREFIX ""
 )
 target_include_directories(libtheora PRIVATE ${libtheora_SOURCE_DIR}/include ${libogg_SOURCE_DIR}/include)
 
