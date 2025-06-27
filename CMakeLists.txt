@@ -101,12 +101,24 @@ if (RETRO_SUBSYSTEM STREQUAL "SDL2")
     FetchContent_Declare(
         SDL2
         URL https://github.com/libsdl-org/SDL/releases/download/release-2.32.4/SDL2-2.32.4.zip
-        PATCH_COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/mac/SDL_cocoawindow.patch # displayp3
+        PATCH_COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/mac/SDL2_cocoawindow.patch # displayp3
     )
     FetchContent_MakeAvailable(SDL2)
     
     add_dependencies(RetroEngine SDL2::SDL2-static)
     target_link_libraries(RetroEngine SDL2::SDL2-static)
+endif()
+
+if (RETRO_SUBSYSTEM STREQUAL "SDL3")
+    FetchContent_Declare(
+        SDL3
+        URL https://github.com/libsdl-org/SDL/releases/download/release-3.2.16/SDL3-3.2.16.zip
+        PATCH_COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/mac/SDL3_cocoawindow.patch # displayp3
+    )
+    FetchContent_MakeAvailable(SDL3)
+    
+    add_dependencies(RetroEngine SDL3::SDL3-static)
+    target_link_libraries(RetroEngine SDL3::SDL3-static)
 endif()
 
 add_dependencies(RetroEngine Ogg::ogg libtheora)

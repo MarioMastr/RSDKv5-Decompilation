@@ -4,24 +4,24 @@ using namespace RSDK;
 
 #define NORMALIZE(val, minVal, maxVal) ((float)(val) - (float)(minVal)) / ((float)(maxVal) - (float)(minVal))
 
-bool32 getControllerButton(RSDK::SKU::InputDeviceSDL2 *device, uint8 buttonID)
+bool32 getControllerButton(RSDK::SKU::InputDeviceSDL3 *device, uint8 buttonID)
 {
-    if (buttonID == (uint8)SDL_CONTROLLER_BUTTON_INVALID || !device)
+    if (buttonID == (uint8) SDL_GAMEPAD_BUTTON_INVALID || !device)
         return false;
 
-    if (SDL_GameControllerGetButton(device->controllerPtr, (SDL_GameControllerButton)buttonID))
+    if (SDL_GetGamepadButton(device->controllerPtr, (SDL_GamepadButton)buttonID))
         return true;
 
     return false;
 }
 
-void RSDK::SKU::InputDeviceSDL2::UpdateInput()
+void RSDK::SKU::InputDeviceSDL3::UpdateInput()
 {
     int32 buttonMap[] = {
-        SDL_CONTROLLER_BUTTON_DPAD_UP,   SDL_CONTROLLER_BUTTON_DPAD_DOWN,  SDL_CONTROLLER_BUTTON_DPAD_LEFT,    SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
-        SDL_CONTROLLER_BUTTON_A,         SDL_CONTROLLER_BUTTON_B,          SDL_CONTROLLER_BUTTON_INVALID,      SDL_CONTROLLER_BUTTON_X,
-        SDL_CONTROLLER_BUTTON_Y,         SDL_CONTROLLER_BUTTON_INVALID,    SDL_CONTROLLER_BUTTON_START,        SDL_CONTROLLER_BUTTON_BACK,
-        SDL_CONTROLLER_BUTTON_LEFTSTICK, SDL_CONTROLLER_BUTTON_RIGHTSTICK, SDL_CONTROLLER_BUTTON_LEFTSHOULDER, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
+        SDL_GAMEPAD_BUTTON_DPAD_UP,   SDL_GAMEPAD_BUTTON_DPAD_DOWN,  SDL_GAMEPAD_BUTTON_DPAD_LEFT,    SDL_GAMEPAD_BUTTON_DPAD_RIGHT,
+        SDL_GAMEPAD_BUTTON_SOUTH,         SDL_GAMEPAD_BUTTON_EAST,          SDL_GAMEPAD_BUTTON_INVALID,      SDL_GAMEPAD_BUTTON_WEST,
+        SDL_GAMEPAD_BUTTON_NORTH,         SDL_GAMEPAD_BUTTON_INVALID,    SDL_GAMEPAD_BUTTON_START,        SDL_GAMEPAD_BUTTON_BACK,
+        SDL_GAMEPAD_BUTTON_LEFT_STICK, SDL_GAMEPAD_BUTTON_RIGHT_STICK, SDL_GAMEPAD_BUTTON_LEFT_SHOULDER, SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER,
     };
 
     int32 keyMasks[] = { KEYMASK_UP, KEYMASK_DOWN, KEYMASK_LEFT,  KEYMASK_RIGHT,  KEYMASK_A,      KEYMASK_B,      KEYMASK_C,       KEYMASK_X,
@@ -42,34 +42,34 @@ void RSDK::SKU::InputDeviceSDL2::UpdateInput()
             this->buttonMasks |= keyMasks[i];
     }
 
-    int32 delta = SDL_GameControllerGetAxis(controllerPtr, SDL_CONTROLLER_AXIS_LEFTX);
+    int32 delta = SDL_GetGamepadAxis(controllerPtr, SDL_GAMEPAD_AXIS_LEFTX);
     if (delta < 0)
         hDelta_L = -NORMALIZE(-delta, 1, 32768);
     else
         hDelta_L = NORMALIZE(delta, 0, 32767);
 
-    delta = SDL_GameControllerGetAxis(controllerPtr, SDL_CONTROLLER_AXIS_LEFTY);
+    delta = SDL_GetGamepadAxis(controllerPtr, SDL_GAMEPAD_AXIS_LEFTY);
     if (delta < 0)
         vDelta_L = -NORMALIZE(-delta, 1, 32768);
     else
         vDelta_L = NORMALIZE(delta, 0, 32767);
     vDelta_L = -vDelta_L;
 
-    delta = SDL_GameControllerGetAxis(controllerPtr, SDL_CONTROLLER_AXIS_RIGHTX);
+    delta = SDL_GetGamepadAxis(controllerPtr, SDL_GAMEPAD_AXIS_RIGHTX);
     if (delta < 0)
         hDelta_R = -NORMALIZE(-delta, 1, 32768);
     else
         hDelta_R = NORMALIZE(delta, 0, 32767);
 
-    delta = SDL_GameControllerGetAxis(controllerPtr, SDL_CONTROLLER_AXIS_RIGHTY);
+    delta = SDL_GetGamepadAxis(controllerPtr, SDL_GAMEPAD_AXIS_RIGHTY);
     if (delta < 0)
         vDelta_R = -NORMALIZE(-delta, 1, 32768);
     else
         vDelta_R = NORMALIZE(delta, 0, 32767);
     vDelta_R = -vDelta_R;
 
-    triggerDeltaL = NORMALIZE(SDL_GameControllerGetAxis(controllerPtr, SDL_CONTROLLER_AXIS_TRIGGERLEFT), 0, 32767);
-    triggerDeltaR = NORMALIZE(SDL_GameControllerGetAxis(controllerPtr, SDL_CONTROLLER_AXIS_TRIGGERRIGHT), 0, 32767);
+    triggerDeltaL = NORMALIZE(SDL_GetGamepadAxis(controllerPtr, SDL_GAMEPAD_AXIS_LEFT_TRIGGER), 0, 32767);
+    triggerDeltaR = NORMALIZE(SDL_GetGamepadAxis(controllerPtr, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER), 0, 32767);
 
     bumperDeltaL = (this->buttonMasks & KEYMASK_BUMPERL) != 0 ? 1.0 : 0.0;
     bumperDeltaR = (this->buttonMasks & KEYMASK_BUMPERR) != 0 ? 1.0 : 0.0;
@@ -111,7 +111,7 @@ void RSDK::SKU::InputDeviceSDL2::UpdateInput()
     ProcessInput(CONT_ANY);
 }
 
-void RSDK::SKU::InputDeviceSDL2::ProcessInput(int32 controllerID)
+void RSDK::SKU::InputDeviceSDL3::ProcessInput(int32 controllerID)
 {
     controller[controllerID].keyUp.press |= this->stateUp;
     controller[controllerID].keyDown.press |= this->stateDown;
@@ -175,15 +175,15 @@ void RSDK::SKU::InputDeviceSDL2::ProcessInput(int32 controllerID)
 #endif
 }
 
-void RSDK::SKU::InputDeviceSDL2::CloseDevice()
+void RSDK::SKU::InputDeviceSDL3::CloseDevice()
 {
     this->active     = false;
     this->isAssigned = false;
-    SDL_GameControllerClose(this->controllerPtr);
+    SDL_CloseGamepad(this->controllerPtr);
     this->controllerPtr = NULL;
 }
 
-RSDK::SKU::InputDeviceSDL2 *RSDK::SKU::InitSDL2InputDevice(uint32 id, SDL_GameController *game_controller)
+RSDK::SKU::InputDeviceSDL3 *RSDK::SKU::InitSDL3InputDevice(uint32 id, SDL_Gamepad *game_controller)
 {
     if (inputDeviceCount >= INPUTDEVICE_COUNT)
         return NULL;
@@ -194,16 +194,16 @@ RSDK::SKU::InputDeviceSDL2 *RSDK::SKU::InitSDL2InputDevice(uint32 id, SDL_GameCo
     if (inputDeviceList[inputDeviceCount])
         delete inputDeviceList[inputDeviceCount];
 
-    inputDeviceList[inputDeviceCount] = new InputDeviceSDL2();
+    inputDeviceList[inputDeviceCount] = new InputDeviceSDL3();
 
-    InputDeviceSDL2 *device = (InputDeviceSDL2 *)inputDeviceList[inputDeviceCount];
+    InputDeviceSDL3 *device = (InputDeviceSDL3 *)inputDeviceList[inputDeviceCount];
 
     device->controllerPtr = game_controller;
 
     device->swapABXY     = false;
     uint8 controllerType = DEVICE_XBOX;
 
-    const char *name = SDL_GameControllerName(device->controllerPtr);
+    const char *name = SDL_GetGamepadName(device->controllerPtr);
 
     if (name != NULL) {
         if (strstr(name, "Xbox"))
@@ -220,7 +220,7 @@ RSDK::SKU::InputDeviceSDL2 *RSDK::SKU::InitSDL2InputDevice(uint32 id, SDL_GameCo
 
     device->active      = true;
     device->disabled    = false;
-    device->gamepadType = (DEVICE_API_SDL2 << 16) | (DEVICE_TYPE_CONTROLLER << 8) | (controllerType << 0);
+    device->gamepadType = (DEVICE_API_SDL3 << 16) | (DEVICE_TYPE_CONTROLLER << 8) | (controllerType << 0);
     device->id          = id;
 
     for (int32 i = 0; i < PLAYER_COUNT; ++i) {
@@ -234,13 +234,13 @@ RSDK::SKU::InputDeviceSDL2 *RSDK::SKU::InitSDL2InputDevice(uint32 id, SDL_GameCo
     return device;
 }
 
-void RSDK::SKU::InitSDL2InputAPI()
+void RSDK::SKU::InitSDL3InputAPI()
 {
-    SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC);
+    SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD | SDL_INIT_HAPTIC);
 
     char path[0x100]; 
     sprintf_s(path, sizeof(path), "%sgamecontrollerdb.txt", SKU::userFileDir);
-    SDL_GameControllerAddMappingsFromFile(path);
+    SDL_AddGamepadMappingsFromFile(path);
 }
 
-void RSDK::SKU::ReleaseSDL2InputAPI() { SDL_QuitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC); }
+void RSDK::SKU::ReleaseSDL3InputAPI() { SDL_QuitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD | SDL_INIT_HAPTIC); }
