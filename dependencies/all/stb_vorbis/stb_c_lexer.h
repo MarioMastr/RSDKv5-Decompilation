@@ -38,7 +38,6 @@
 // Contributors:
 //   Arpad Goretity (bugfix)
 //   Alan Hickman (hex floats)
-//   github:mundusnine (bugfix)
 //
 // LICENSE
 //
@@ -563,6 +562,7 @@ int stb_c_lexer_get_token(stb_lexer *lexer)
          {
             int n = 0;
             lexer->string = lexer->string_storage;
+            lexer->string_len = n;
             do {
                if (n+1 >= lexer->string_storage_len)
                   return stb__clex_token(lexer, CLEX_parse_error, p, p+n);
@@ -576,7 +576,6 @@ int stb_c_lexer_get_token(stb_lexer *lexer)
                 STB_C_LEX_DOLLAR_IDENTIFIER( || p[n] == '$' )
             );
             lexer->string[n] = 0;
-            lexer->string_len = n;
             return stb__clex_token(lexer, CLEX_id, p, p+n-1);
          }
 

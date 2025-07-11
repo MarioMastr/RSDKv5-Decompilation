@@ -130,7 +130,7 @@ SOURCE=..\stb_image.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\stb_image_resize2.h
+SOURCE=..\stb_image_resize.h
 # End Source File
 # Begin Source File
 
