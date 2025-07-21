@@ -825,7 +825,7 @@ void RenderDevice::LoadShader(const char *fileName, bool32 linear)
         glGetShaderiv(frag, GL_COMPILE_STATUS, &success);
         if (!success) {
             glGetShaderInfoLog(frag, 0x1000, NULL, infoLog);
-            PrintLog(PRINT_NORMAL, "Fragment shader compiling failed:\n%s", infoLog);
+            PrintLog(PRINT_NORMAL, "Fragment shader compiling for %s failed:\n%s", fileName, infoLog);
             return;
         }     
     }

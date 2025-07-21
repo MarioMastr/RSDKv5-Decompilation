@@ -23,29 +23,6 @@ elseif(RETRO_SUBSYSTEM STREQUAL "DX11")
         XInput
     )
 elseif(RETRO_SUBSYSTEM STREQUAL "OGL")
-    find_package(glfw3 CONFIG)
-
-    if(NOT glfw3_FOUND)
-        message("could not find glfw, attempting to build from source")
-        add_subdirectory(dependencies/ogl/glfw)
-    else()
-        message("found GLFW")
-    endif()
-
-    find_package(GLEW CONFIG)
-
-    if(NOT GLEW_FOUND)
-        message(NOTICE "could not find glew, attempting to build from source")
-
-    else()
-        message("found GLEW")
-        add_library(glew ALIAS GLEW::GLEW)
-    endif()
-
-    target_link_libraries(RetroEngine
-        glew
-        glfw
-    )
 elseif(RETRO_SUBSYSTEM STREQUAL "VK")
     find_package(glfw3 CONFIG)
 
@@ -64,8 +41,9 @@ elseif(RETRO_SUBSYSTEM STREQUAL "VK")
         Vulkan::Vulkan
     )
 elseif(RETRO_SUBSYSTEM STREQUAL "SDL2")
+elseif(RETRO_SUBSYSTEM STREQUAL "SDL3")
 else()
-    message(FATAL_ERROR "RETRO_SUBSYSTEM must be one of DX9, DX11, OGL, VK, or SDL2")
+    message(FATAL_ERROR "RETRO_SUBSYSTEM must be one of DX9, DX11, OGL, VK, SDL2, or SDL3")
 endif()
 
 if(USE_MINIAUDIO)

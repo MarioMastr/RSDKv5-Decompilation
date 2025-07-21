@@ -1,3 +1,5 @@
+#include "RSDK/Core/RetroEngine.hpp"
+
 #ifdef STFU_INTELLISENSE
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>

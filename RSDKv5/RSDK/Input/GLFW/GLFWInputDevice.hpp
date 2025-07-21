@@ -1,8 +1,11 @@
+#pragma once
+
+#include <RSDK/Core/RetroEngine.hpp>
 
 namespace SKU
 {
 
-struct InputDeviceGLFW : InputDevice {
+struct InputDeviceGLFW : RSDK::InputDevice {
     void UpdateInput();
     void ProcessInput(int32 controllerID);
     void CloseDevice();

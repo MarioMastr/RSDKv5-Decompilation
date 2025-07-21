@@ -317,15 +317,17 @@ enum GameRegions {
 #error One of RSDK_USE_DX9, RSDK_USE_DX11, RSDK_USE_SDL2, RSDK_USE_SDL3, or RSDK_USE_OGL must be defined.
 #endif
 
-#if !RETRO_AUDIODEVICE_MINI && !RSDK_USE_SDL2 && !RSDK_USE_SDL3
+#if !RETRO_AUDIODEVICE_MINI
+#if !RSDK_USE_SDL2 && !RSDK_USE_SDL3
 #undef RETRO_AUDIODEVICE_XAUDIO
 #define RETRO_AUDIODEVICE_XAUDIO (1)
-#elif defined(RSDK_USE_SDL2)
+#elif !RSDK_USE_SDL3
 #undef RETRO_AUDIODEVICE_SDL2
 #define RETRO_AUDIODEVICE_SDL2 (1)
-#elif defined(RSDK_USE_SDL3)
+#else
 #undef RETRO_AUDIODEVICE_SDL3
 #define RETRO_AUDIODEVICE_SDL3 (1)
+#endif
 #endif
 
 #elif RETRO_PLATFORM == RETRO_XB1
@@ -432,10 +434,8 @@ enum GameRegions {
 
 #undef RETRO_RENDERDEVICE_SDL2
 #define RETRO_RENDERDEVICE_SDL2 (1)
-
 #undef RETRO_AUDIODEVICE_SDL2
 #define RETRO_AUDIODEVICE_SDL2 (1)
-
 #undef RETRO_INPUTDEVICE_SDL2
 #define RETRO_INPUTDEVICE_SDL2 (1)
 
@@ -443,14 +443,20 @@ enum GameRegions {
 
 #undef RETRO_RENDERDEVICE_SDL3
 #define RETRO_RENDERDEVICE_SDL3 (1)
-
 #undef RETRO_AUDIODEVICE_SDL3
 #define RETRO_AUDIODEVICE_SDL3 (1)
-
 #undef RETRO_INPUTDEVICE_SDL3
 #define RETRO_INPUTDEVICE_SDL3 (1)
 
+#elif defined(RSDK_USE_OGL)
+
+#undef RETRO_RENDERDEVICE_GLFW
+#define RETRO_RENDERDEVICE_GLFW (1)
+#undef RETRO_INPUTDEVICE_GLFW
+#define RETRO_INPUTDEVICE_GLFW (1)
+
 #endif
+
 #endif
 
 #if RETRO_PLATFORM == RETRO_WIN || RETRO_PLATFORM == RETRO_UWP
@@ -507,6 +513,20 @@ enum GameRegions {
 #if RETRO_PLATFORM == RETRO_OSX
 
 #include "cocoaHelpers.hpp"
+
+#if RETRO_RENDERDEVICE_GLFW
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#endif
+
+#if RETRO_AUDIODEVICE_MINI
+#define MA_NO_DECODING
+#define MA_NO_ENCODING
+#define MA_NO_RESOURCE_MANAGER 
+#define MA_NO_ENGINE
+#include <miniaudio/miniaudio.h>
+#endif
+
 #elif RETRO_PLATFORM == RETRO_iOS
 
 #include "cocoaHelpers.hpp"
@@ -564,17 +584,18 @@ extern "C" {
 
 #if RETRO_RENDERDEVICE_SDL2 || RETRO_INPUTDEVICE_SDL2 || RETRO_AUDIODEVICE_SDL2
 #if RETRO_PLATFORM == RETRO_OSX
-// yeah, I dunno how you're meant to do the below with macOS frameworks so leaving this as is for rn :P
 #include <SDL2/SDL.h>
 #else
-// This is the way of including SDL that is recommended by the devs themselves:
-// https://wiki.libsdl.org/FAQDevelopment#do_i_include_sdl.h_or_sdlsdl.h
 #include "SDL.h"
 #endif
 #endif
 
 #if RETRO_RENDERDEVICE_SDL3 || RETRO_INPUTDEVICE_SDL3 || RETRO_AUDIODEVICE_SDL3
+#if RETRO_PLATFORM == RETRO_OSX
 #include <SDL3/SDL.h>
+#else
+#include "SDL.h"
+#endif
 #endif
 
 #include <theora/theoradec.h>
