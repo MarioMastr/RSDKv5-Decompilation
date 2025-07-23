@@ -80,10 +80,18 @@ set_target_properties(RetroEngine PROPERTIES OUTPUT_NAME ${RETRO_OUTPUT_NAME})
 include(FetchContent)
 
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
-FetchContent_Declare(libogg URL https://ftp.osuosl.org/pub/xiph/releases/ogg/libogg-1.3.5.zip)
+FetchContent_Declare(
+    libogg
+    GIT_REPOSITORY https://gitlab.xiph.org/xiph/ogg.git
+    GIT_TAG v1.3.6 # new version!!!!!!!!!!!!!!!
+)
 FetchContent_MakeAvailable(libogg)
 
-FetchContent_Declare(libtheora URL https://downloads.xiph.org/releases/theora/libtheora-1.2.0.tar.gz)
+FetchContent_Declare(
+    libtheora
+    GIT_REPOSITORY https://gitlab.xiph.org/xiph/theora.git
+    GIT_TAG v1.2.0
+)
 FetchContent_MakeAvailable(libtheora)
 
 file(GLOB THEORA_SOURCES "${libtheora_SOURCE_DIR}/lib/*.c")
@@ -92,7 +100,7 @@ add_library(libtheora STATIC ${THEORA_SOURCES})
 set_target_properties(libtheora
     PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${libtheora_SOURCE_DIR}/include"
-    WORKING_DIRECTORY "${libtheora_BUILD_DIR}"
+    ARCHIVE_OUTPUT_DIRECTORY "${libtheora_BUILD_DIR}"
     PREFIX ""
 )
 target_include_directories(libtheora PRIVATE ${libtheora_SOURCE_DIR}/include ${libogg_SOURCE_DIR}/include)
@@ -100,7 +108,8 @@ target_include_directories(libtheora PRIVATE ${libtheora_SOURCE_DIR}/include ${l
 if (RETRO_SUBSYSTEM STREQUAL "SDL2")
     FetchContent_Declare(
         SDL2
-        URL https://github.com/libsdl-org/SDL/releases/download/release-2.32.4/SDL2-2.32.4.zip
+        GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+        GIT_TAG release-2.32.8
         PATCH_COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/mac/SDL2_cocoawindow.patch # displayp3
     )
     FetchContent_MakeAvailable(SDL2)
@@ -112,7 +121,8 @@ endif()
 if (RETRO_SUBSYSTEM STREQUAL "SDL3")
     FetchContent_Declare(
         SDL3
-        URL https://github.com/libsdl-org/SDL/releases/download/release-3.2.16/SDL3-3.2.16.zip
+        GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+        GIT_TAG release-3.2.18
         PATCH_COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/mac/SDL3_cocoawindow.patch # displayp3
     )
     FetchContent_MakeAvailable(SDL3)
