@@ -9,7 +9,7 @@ set_source_files_properties(${RETRO_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Re
 add_executable(RetroEngine MACOSX_BUNDLE ${RETRO_ICON} ${RETRO_FILES} dependencies/mac/cocoaHelpers.mm)
 
 set(RETRO_SUBSYSTEM "OGL" CACHE STRING "The subsystem to use")
-option(USE_MINIAUDIO "Whether or not to use MiniAudio or default to XAudio." ON)
+option(USE_MINIAUDIO "Whether or not to use MiniAudio." OFF)
 
 if(USE_MINIAUDIO)
     target_compile_definitions(RetroEngine PRIVATE RETRO_AUDIODEVICE_MINI=1)
