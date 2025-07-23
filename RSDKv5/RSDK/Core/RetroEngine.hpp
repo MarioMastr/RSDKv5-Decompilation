@@ -455,6 +455,8 @@ enum GameRegions {
 #undef RETRO_INPUTDEVICE_GLFW
 #define RETRO_INPUTDEVICE_GLFW (1)
 
+#else
+#error One of RSDK_USE_SDL2, RSDK_USE_SDL3, or RSDK_USE_OGL must be defined.
 #endif
 
 #endif
