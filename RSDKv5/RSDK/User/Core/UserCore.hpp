@@ -201,7 +201,6 @@ inline void WriteText(FileIO *file, const char *string, ...)
     va_list args;
     va_start(args, string);
     vsnprintf(buffer, sizeof(buffer), string, args);
-    snprintf(buffer,  sizeof(buffer),"%s", buffer);
     va_end(args);
 
     fWrite(buffer, sizeof(char), strlen(buffer), file);
