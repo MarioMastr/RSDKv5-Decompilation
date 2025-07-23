@@ -123,8 +123,8 @@ if (RETRO_SUBSYSTEM STREQUAL "SDL3")
     FetchContent_Declare(
         SDL3
         GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-        GIT_TAG main # want newest versions for SDL_CreateGPURenderer
-        # PATCH_COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/mac/SDL3_cocoawindow.patch # displayp3
+        GIT_TAG release-3.2.18
+        PATCH_COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/mac/SDL3_cocoawindow.patch # displayp3
     )
     FetchContent_MakeAvailable(SDL3)
     
