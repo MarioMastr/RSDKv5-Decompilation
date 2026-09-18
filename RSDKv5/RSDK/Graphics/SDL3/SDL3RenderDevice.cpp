@@ -1,6 +1,3 @@
-#include <RSDK/Core/RetroEngine.hpp>
-#include <SDL3/SDL_render.h>
-using namespace RSDK;
 
 SDL_Window *RenderDevice::window     = nullptr;
 SDL_Renderer *RenderDevice::renderer = nullptr;
