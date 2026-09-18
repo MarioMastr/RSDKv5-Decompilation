@@ -7,7 +7,9 @@ cbuffer ShaderConstants : register(b0, space3)
     float2 pixelSize;
     float2 textureSize;
     float2 viewSize;
+#if defined(RETRO_REV02)
     float screenDim;
+#endif
 };
 
 struct VertexInput
