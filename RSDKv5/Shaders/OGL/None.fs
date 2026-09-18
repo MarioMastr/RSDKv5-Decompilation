@@ -6,17 +6,19 @@
 #define SUPPORTS_DERIVATIVES 0
 #endif // GL_OES_standard_derivatives
 
-// round does not exist in GLES 2
+#else // GL_ES
+#define SUPPORTS_DERIVATIVES 1 // GLES 3+ or regular OGL = should support derivs
+#endif // GL_ES
+
+// round does not exist in GLES 2 nor regular GL 2.X
+#if __VERSION__ < 130
 vec2 round(vec2 inp) {
     vec2 outp;
     outp.x = fract(inp.x) < 0.5 ? floor(inp.x) : ceil(inp.x);
     outp.y = fract(inp.y) < 0.5 ? floor(inp.y) : ceil(inp.y);
     return outp;
 }
-
-#else // GL_ES
-#define SUPPORTS_DERIVATIVES 1 // GLES 3+ or regular OGL = should support derivs
-#endif // GL_ES
+#endif
 
 // =======================
 // VARIABLES
