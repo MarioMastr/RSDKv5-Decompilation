@@ -1,4 +1,10 @@
+#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+struct ShaderEntry : public ShaderEntryBase {
+    SDL_GPUShader *fragmentShader;
+};
+#else
 using ShaderEntry = ShaderEntryBase;
+#endif
 
 class RenderDevice : public RenderDeviceBase
 {
@@ -69,6 +75,11 @@ private:
 
     static SDL_FColor GetFColor(uint32 color);
 
+#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+    static bool SetGPUState(SDL_Texture *texture);
+    static void ReleaseShaders();
+#endif
+
     static uint32 displayModeIndex;
     static int32 displayModeCount;
 
@@ -80,4 +91,14 @@ private:
 
     // thingo majigo for handling video/image swapping
     static uint8 lastTextureFormat;
+
+#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+    static SDL_GPUDevice *gpuDevice;
+    static SDL_GPUSampler *samplerPoint;
+    static SDL_GPUSampler *samplerLinear;
+    static SDL_GPURenderState *gpuRenderState;
+    static SDL_Texture *gpuStateTexture;
+    static int32 gpuStateShader;
+    static SDL_GPUShaderFormat gpuShaderFormat;
+#endif
 };

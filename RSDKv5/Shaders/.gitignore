@@ -3,3 +3,8 @@
 !DX11
 !OGL
 !Vulkan
+!Slang/
+Slang/*
+!Slang/*.slang
+!Slang/README.md
+!Slang/compile_sdl3.py
