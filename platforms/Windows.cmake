@@ -102,6 +102,7 @@ elseif(RETRO_SUBSYSTEM STREQUAL "SDL2")
         $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
     )
 elseif(RETRO_SUBSYSTEM STREQUAL "SDL3")
+    set_target_properties(RetroEngine PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
     find_package(SDL3 CONFIG REQUIRED) # i ain't setting this up all the way
     target_link_libraries(RetroEngine 
         $<TARGET_NAME_IF_EXISTS:SDL3::SDL3main>

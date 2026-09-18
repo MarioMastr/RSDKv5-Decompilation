@@ -25,8 +25,6 @@ def compile_shader(slangc, source, target, stage, output):
         "-stage",
         "fragment",
         "-no-mangle",
-        "-profile",
-        "spirv_1_0",
         str(source),
         "-o",
         str(output),
