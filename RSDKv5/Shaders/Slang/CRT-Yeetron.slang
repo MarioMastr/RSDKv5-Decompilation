@@ -1,4 +1,4 @@
-#include "RSDKShader.slang"
+#include "Common.slang"
 
 static const float RSDK_PI = 3.14159;
 static const float viewSizeHD = 720.0;

@@ -29,6 +29,9 @@ def compile_shader(slangc, source, target, stage, output):
         "-o",
         str(output),
     ]
+    if target == "spirv":
+        command.insert(command.index("-no-mangle"), "-profile")
+        command.insert(command.index("-no-mangle"), "spirv_1_0")
     if stage == "vertex":
         command[command.index("-entry") + 1] = "VSMain"
         command[command.index("-stage") + 1] = "vertex"
@@ -39,7 +42,7 @@ def compile_shader(slangc, source, target, stage, output):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--slangc", default="slangc")
-    parser.add_argument("--output", type=pathlib.Path, default=pathlib.Path("../SDL3"))
+    parser.add_argument("--output", type=pathlib.Path, default=pathlib.Path("../CSO-SDL3"))
     parser.add_argument(
         "--targets",
         nargs="+",
@@ -51,11 +54,9 @@ def main():
 
     args.output.mkdir(parents=True, exist_ok=True)
     root = pathlib.Path(__file__).parent
-    extensions = {"spirv": "spv", "dxil": "dxil", "metal": "msl", "hlsl": "hlsl"}
     for target in args.targets:
-        extension = extensions[target]
         for name in SHADERS:
-            compile_shader(args.slangc, root / f"{name}.slang", target, "fragment", args.output / f"{name}.{extension}")
+            compile_shader(args.slangc, root / f"{name}.slang", target, "fragment", args.output / f"{name}.frag")
 
 
 if __name__ == "__main__":

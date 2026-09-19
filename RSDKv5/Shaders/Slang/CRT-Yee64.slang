@@ -1,4 +1,4 @@
-#include "RSDKShader.slang"
+#include "Common.slang"
 
 static const float viewSizeHD = 720.0;
 static const float3 intensity = float3(1.2, 0.9, 0.9);

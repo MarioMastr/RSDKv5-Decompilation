@@ -1,4 +1,4 @@
-#include "RSDKShader.slang"
+#include "Common.slang"
 
 float4 PSMain(PixelInput input) : SV_Target
 {

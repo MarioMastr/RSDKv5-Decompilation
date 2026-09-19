@@ -708,18 +708,8 @@ void RenderDevice::LoadShader(const char *fileName, bool32 linear)
             return;
     }
 
-    const char *extension = nullptr;
-    if (gpuShaderFormat == SDL_GPU_SHADERFORMAT_SPIRV)
-        extension = "spv";
-    else if (gpuShaderFormat == SDL_GPU_SHADERFORMAT_DXIL)
-        extension = "dxil";
-    else if (gpuShaderFormat == SDL_GPU_SHADERFORMAT_MSL)
-        extension = "msl";
-    if (!extension)
-        return;
-
     char fullFilePath[0x100];
-    sprintf_s(fullFilePath, sizeof(fullFilePath), "Data/Shaders/SDL3/%s.%s", fileName, extension);
+    sprintf_s(fullFilePath, sizeof(fullFilePath), "Data/Shaders/CSO-SDL3/%s.frag", fileName);
 
     FileInfo info;
     InitFileInfo(&info);
@@ -728,20 +718,22 @@ void RenderDevice::LoadShader(const char *fileName, bool32 linear)
         return;
     }
 
-    uint8 *code = (uint8 *)malloc(info.fileSize);
-    ReadBytes(&info, code, info.fileSize);
+    uint8 *fileData = NULL;
+    AllocateStorage((void **)&fileData, info.fileSize + 1, DATASET_TMP, false);
+    ReadBytes(&info, fileData, info.fileSize);
+    fileData[info.fileSize] = 0;
     CloseFile(&info);
 
     SDL_GPUShaderCreateInfo createInfo = {};
     createInfo.code_size = info.fileSize;
-    createInfo.code = code;
+    createInfo.code = fileData;
     createInfo.entrypoint = "main";
     createInfo.format = gpuShaderFormat;
     createInfo.stage = SDL_GPU_SHADERSTAGE_FRAGMENT;
     createInfo.num_samplers = 1;
     createInfo.num_uniform_buffers = 1;
     SDL_GPUShader *fragmentShader = SDL_CreateGPUShader(gpuDevice, &createInfo);
-    free(code);
+    RemoveStorageEntry((void **)&fileData);
     if (!fragmentShader) {
         PrintLog(PRINT_NORMAL, "[SDL3] Failed to create shader %s: %s", fileName, SDL_GetError());
         return;
