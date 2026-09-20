@@ -8,6 +8,7 @@ the format supported by SDL's active GPU backend.
 import argparse
 import pathlib
 import subprocess
+import sys
 
 
 SHADERS = ["None", "Clean", "CRT-Yeetron", "CRT-Yee64", "YUV-420", "YUV-422", "YUV-444", "RGB-Image"]
@@ -40,23 +41,29 @@ def compile_shader(slangc, source, target, stage, output):
 
 
 def main():
+    is_windows = sys.platform == "win32"
+    default_targets = ("spirv", "dxil") if is_windows else ("spirv", "metal")
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--slangc", default="slangc")
     parser.add_argument("--output", type=pathlib.Path, default=pathlib.Path("../CSO-SDL3"))
     parser.add_argument(
         "--targets",
         nargs="+",
-        choices=("spirv", "dxil", "metal", "hlsl"),
-        default=("spirv", "dxil", "metal", "hlsl"),
-        help="shader targets to generate (default: all SDL GPU targets)",
+        choices=("spirv", "dxil", "metal"),
+        default=default_targets,
+        help=f"shader targets to generate (default: {', '.join(default_targets)})",
     )
     args = parser.parse_args()
 
     args.output.mkdir(parents=True, exist_ok=True)
     root = pathlib.Path(__file__).parent
+    folders = {"spirv": "SPIRV", "dxil": "DXIL", "metal": "MSL"}
     for target in args.targets:
+        target_output = args.output / folders[target]
+        target_output.mkdir(parents=True, exist_ok=True)
         for name in SHADERS:
-            compile_shader(args.slangc, root / f"{name}.slang", target, "fragment", args.output / f"{name}.frag")
+            compile_shader(args.slangc, root / f"{name}.slang", target, "fragment", target_output / f"{name}.frag")
 
 
 if __name__ == "__main__":

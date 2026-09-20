@@ -30,12 +30,14 @@ uint8 RenderDevice::lastTextureFormat = -1;
 
 SDL_FColor RenderDevice::GetFColor(uint32 color) {
     SDL_Color *c = (SDL_Color *)&color;
-    return SDL_FColor {
-        .r = (float) c->r / 255.0f,
-        .g = (float) c->g / 255.0f,
-        .b = (float) c->b / 255.0f,
-        .a = (float) c->a / 255.0f
-    };
+
+    SDL_FColor fc{};
+    fc.r = (float)c->r / 255.0f;
+    fc.g = (float)c->g / 255.0f;
+    fc.b = (float)c->b / 255.0f;
+    fc.a = (float)c->a / 255.0f;
+
+    return fc;
 }
 
 #if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
@@ -708,8 +710,16 @@ void RenderDevice::LoadShader(const char *fileName, bool32 linear)
             return;
     }
 
+    const char *folder = nullptr;
+    if (gpuShaderFormat == SDL_GPU_SHADERFORMAT_SPIRV)
+        folder = "SPIRV";
+    else if (gpuShaderFormat == SDL_GPU_SHADERFORMAT_DXIL)
+        folder = "DXIL";
+    else if (gpuShaderFormat == SDL_GPU_SHADERFORMAT_MSL)
+        folder = "MSL";
+
     char fullFilePath[0x100];
-    sprintf_s(fullFilePath, sizeof(fullFilePath), "Data/Shaders/CSO-SDL3/%s.frag", fileName);
+    sprintf_s(fullFilePath, sizeof(fullFilePath), "Data/Shaders/CSO-SDL3/%s/%s.frag", folder, fileName);
 
     FileInfo info;
     InitFileInfo(&info);
