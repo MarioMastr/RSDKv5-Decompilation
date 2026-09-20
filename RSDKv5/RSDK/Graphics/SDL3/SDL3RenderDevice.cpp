@@ -770,16 +770,17 @@ bool RenderDevice::InitShaders()
         LoadShader("Clean", true);
         LoadShader("CRT-Yeetron", true);
         LoadShader("CRT-Yee64", true);
+
+#if RETRO_USE_MOD_LOADER
+        // a place for mods to load custom shaders
+        RunModCallbacks(MODCB_ONSHADERLOAD, NULL);
+        userShaderCount = shaderCount;
+#endif
+
         LoadShader("YUV-420", true);
         LoadShader("YUV-422", true);
         LoadShader("YUV-444", true);
         LoadShader("RGB-Image", true);
-
-        #if RETRO_USE_MOD_LOADER
-                // a place for mods to load custom shaders
-                RunModCallbacks(MODCB_ONSHADERLOAD, NULL);
-                userShaderCount = shaderCount;
-        #endif
         maxShaders = shaderCount;
     }
     if (!maxShaders) {

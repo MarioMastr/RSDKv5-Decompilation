@@ -278,6 +278,7 @@ extern ShaderEntry shaderList[SHADER_COUNT];
 extern VideoSettings videoSettings;
 extern VideoSettings videoSettingsBackup;
 extern bool32 changedVideoSettings;
+extern const RenderVertex rsdkVertexBuffer[RETRO_REV02 ? 60 : 24];
 
 #if RETRO_USE_MOD_LOADER
 extern int32 userShaderCount;
