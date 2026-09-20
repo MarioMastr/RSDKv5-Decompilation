@@ -835,7 +835,7 @@ bool RenderDevice::InitShaders()
 bool RenderDevice::SetupRendering()
 {
 #if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
-    gpuDevice = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_DXIL | SDL_GPU_SHADERFORMAT_MSL, true, nullptr);
+    gpuDevice = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_DXIL | SDL_GPU_SHADERFORMAT_MSL, false, nullptr);
     if (gpuDevice) {
         renderer = SDL_CreateGPURenderer(gpuDevice, window);
         if (renderer) {
