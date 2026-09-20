@@ -76,6 +76,7 @@ private:
     static SDL_FColor GetFColor(uint32 color);
 
 #if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+    static void SetLinear();
     static bool SetGPUState(SDL_Texture *texture);
     static void ReleaseShaders();
 #endif

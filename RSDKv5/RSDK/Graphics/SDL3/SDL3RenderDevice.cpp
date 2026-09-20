@@ -41,6 +41,21 @@ SDL_FColor RenderDevice::GetFColor(uint32 color) {
 }
 
 #if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+void RenderDevice::SetLinear()
+{
+    int32 shaderID = videoSettings.shaderID;
+    if (shaderID < 0 || shaderID >= shaderCount)
+        shaderID = 0;
+
+    SDL_ScaleMode scaleMode = shaderList[shaderID].linear ? SDL_SCALEMODE_LINEAR : SDL_SCALEMODE_NEAREST;
+    for (int32 s = 0; s < SCREEN_COUNT; ++s) {
+        if (screenTexture[s])
+            SDL_SetTextureScaleMode(screenTexture[s], scaleMode);
+    }
+    if (imageTexture)
+        SDL_SetTextureScaleMode(imageTexture, scaleMode);
+}
+
 bool RenderDevice::SetGPUState(SDL_Texture *texture)
 {
     if (!gpuDevice || !videoSettings.shaderSupport || !texture)
@@ -208,6 +223,7 @@ void RenderDevice::FlipScreen()
     SDL_RenderClear(renderer);
 
 #if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+    SetLinear();
 #define SET_GPU_STATE(texture)                                                                                                                       \
     do {                                                                                                                                              \
         if (gpuDevice) {                                                                                                                              \
@@ -228,7 +244,7 @@ void RenderDevice::FlipScreen()
             vertColor = GetFColor(vertexBuffer[startVert].color);
             SET_GPU_STATE(imageTexture);
             SDL_RenderGeometryRaw(renderer, imageTexture, &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
-                                  &vertColor, sizeof(RenderVertex) / 255, &vertexBuffer[startVert].tex.x,
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
             break;
 
@@ -236,7 +252,7 @@ void RenderDevice::FlipScreen()
             vertColor = GetFColor(vertexBuffer[startVert].color);
             SET_GPU_STATE(screenTexture[0]);
             SDL_RenderGeometryRaw(renderer, screenTexture[0], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
-                                  &vertColor, sizeof(RenderVertex) / 255, &vertexBuffer[startVert].tex.x,
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
             break;
 
@@ -249,7 +265,7 @@ void RenderDevice::FlipScreen()
             vertColor = GetFColor(vertexBuffer[startVert].color);
             SET_GPU_STATE(screenTexture[0]);
             SDL_RenderGeometryRaw(renderer, screenTexture[0], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
-                                  &vertColor, sizeof(RenderVertex) / 255, &vertexBuffer[startVert].tex.x,
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
 
 #if RETRO_REV02
@@ -260,7 +276,7 @@ void RenderDevice::FlipScreen()
             vertColor = GetFColor(vertexBuffer[startVert].color);
             SET_GPU_STATE(screenTexture[1]);
             SDL_RenderGeometryRaw(renderer, screenTexture[1], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
-                                  &vertColor, sizeof(RenderVertex) / 255, &vertexBuffer[startVert].tex.x,
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
             break;
 
@@ -270,21 +286,21 @@ void RenderDevice::FlipScreen()
             vertColor = GetFColor(vertexBuffer[startVert].color);
             SET_GPU_STATE(screenTexture[0]);
             SDL_RenderGeometryRaw(renderer, screenTexture[0], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
-                                  &vertColor, sizeof(RenderVertex) / 255, &vertexBuffer[startVert].tex.x,
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
 
             startVert = startVertex_3P[1];
             vertColor = GetFColor(vertexBuffer[startVert].color);
             SET_GPU_STATE(screenTexture[1]);
             SDL_RenderGeometryRaw(renderer, screenTexture[1], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
-                                  &vertColor, sizeof(RenderVertex) / 255, &vertexBuffer[startVert].tex.x,
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
 
             startVert = startVertex_3P[2];
             vertColor = GetFColor(vertexBuffer[startVert].color);
             SET_GPU_STATE(screenTexture[2]);
             SDL_RenderGeometryRaw(renderer, screenTexture[2], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
-                                  &vertColor, sizeof(RenderVertex) / 255, &vertexBuffer[startVert].tex.x,
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
             break;
 
@@ -293,7 +309,7 @@ void RenderDevice::FlipScreen()
             vertColor = GetFColor(vertexBuffer[startVert].color);
             SET_GPU_STATE(screenTexture[0]);
             SDL_RenderGeometryRaw(renderer, screenTexture[0], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
-                                  &vertColor, sizeof(RenderVertex) / 255, &vertexBuffer[startVert].tex.x,
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
 
             startVert = 36;
@@ -301,21 +317,21 @@ void RenderDevice::FlipScreen()
 
             SET_GPU_STATE(screenTexture[1]);
             SDL_RenderGeometryRaw(renderer, screenTexture[1], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
-                                  &vertColor, sizeof(RenderVertex) / 255, &vertexBuffer[startVert].tex.x,
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
 
             startVert = 42;
             vertColor = GetFColor(vertexBuffer[startVert].color);
             SET_GPU_STATE(screenTexture[2]);
             SDL_RenderGeometryRaw(renderer, screenTexture[2], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
-                                  &vertColor, sizeof(RenderVertex) / 255, &vertexBuffer[startVert].tex.x,
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
 
             startVert = 48;
             vertColor = GetFColor(vertexBuffer[startVert].color);
             SET_GPU_STATE(screenTexture[3]);
             SDL_RenderGeometryRaw(renderer, screenTexture[3], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
-                                  &vertColor, sizeof(RenderVertex) / 255, &vertexBuffer[startVert].tex.x,
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
             break;
 #endif
@@ -436,13 +452,15 @@ void RenderDevice::Release(bool32 isRefresh)
 {
 #if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
     ReleaseShaders();
-    if (samplerPoint) {
-        SDL_ReleaseGPUSampler(gpuDevice, samplerPoint);
-        samplerPoint = nullptr;
-    }
-    if (samplerLinear) {
-        SDL_ReleaseGPUSampler(gpuDevice, samplerLinear);
-        samplerLinear = nullptr;
+    if (!isRefresh) {
+        if (samplerPoint) {
+            SDL_ReleaseGPUSampler(gpuDevice, samplerPoint);
+            samplerPoint = nullptr;
+        }
+        if (samplerLinear) {
+            SDL_ReleaseGPUSampler(gpuDevice, samplerLinear);
+            samplerLinear = nullptr;
+        }
     }
 #endif
 
@@ -517,13 +535,13 @@ void RenderDevice::RefreshWindow()
 
             winRect.w = videoSettings.windowWidth;
             winRect.h = videoSettings.windowHeight;
-            SDL_SetWindowFullscreen(window, true);
+            SDL_SetWindowFullscreen(window, false);
             SDL_HideCursor();
         }
         else {
             winRect.w = displayMode->w;
             winRect.h = displayMode->h;
-            SDL_SetWindowFullscreen(window, false);
+            SDL_SetWindowFullscreen(window, true);
             SDL_ShowCursor();
         }
 

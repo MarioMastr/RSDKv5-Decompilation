@@ -12,33 +12,11 @@ cbuffer ShaderConstants : register(b0, space3)
 #endif
 };
 
-struct VertexInput
-{
-    float4 pos : POSITION;
-    float4 color : COLOR0;
-    float4 tex : TEXCOORD0;
-};
-
-struct VertexOutput
-{
-    float4 pos : SV_Position;
-    float4 color : COLOR0;
-    float4 tex : TEXCOORD0;
-};
-
 struct PixelInput
 {
-    float4 tex : TEXCOORD0;
+    float4 color : COLOR0;
+    float2 tex : TEXCOORD0;
 };
-
-VertexOutput VSMain(VertexInput input)
-{
-    VertexOutput output;
-    output.pos = input.pos;
-    output.color = input.color;
-    output.tex = input.tex;
-    return output;
-}
 
 float4 SampleDiffuse(float2 texCoord)
 {
