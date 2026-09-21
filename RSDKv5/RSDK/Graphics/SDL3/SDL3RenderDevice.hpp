@@ -1,6 +1,7 @@
 #if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
 struct ShaderEntry : public ShaderEntryBase {
     SDL_GPUShader *fragmentShader;
+    SDL_GPURenderState *renderState;
 };
 #else
 using ShaderEntry = ShaderEntryBase;
@@ -77,7 +78,6 @@ private:
 
 #if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
     static void SetLinear();
-    static bool SetGPUState(SDL_Texture *texture);
     static void ReleaseShaders();
 #endif
 
@@ -95,11 +95,6 @@ private:
 
 #if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
     static SDL_GPUDevice *gpuDevice;
-    static SDL_GPUSampler *samplerPoint;
-    static SDL_GPUSampler *samplerLinear;
-    static SDL_GPURenderState *gpuRenderState;
-    static SDL_Texture *gpuStateTexture;
-    static int32 gpuStateShader;
     static SDL_GPUShaderFormat gpuShaderFormat;
 #endif
 };

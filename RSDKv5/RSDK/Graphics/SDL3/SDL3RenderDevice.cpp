@@ -7,11 +7,6 @@ SDL_Texture *RenderDevice::imageTexture = nullptr;
 
 #if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
 SDL_GPUDevice *RenderDevice::gpuDevice = nullptr;
-SDL_GPUSampler *RenderDevice::samplerPoint = nullptr;
-SDL_GPUSampler *RenderDevice::samplerLinear = nullptr;
-SDL_GPURenderState *RenderDevice::gpuRenderState = nullptr;
-SDL_Texture *RenderDevice::gpuStateTexture = nullptr;
-int32 RenderDevice::gpuStateShader = -1;
 SDL_GPUShaderFormat RenderDevice::gpuShaderFormat = SDL_GPU_SHADERFORMAT_INVALID;
 #endif
 
@@ -56,75 +51,12 @@ void RenderDevice::SetLinear()
         SDL_SetTextureScaleMode(imageTexture, scaleMode);
 }
 
-bool RenderDevice::SetGPUState(SDL_Texture *texture)
-{
-    if (!gpuDevice || !videoSettings.shaderSupport || !texture)
-        return false;
-
-    int32 shaderID = videoSettings.shaderID;
-    if (shaderID < 0 || shaderID >= shaderCount || !shaderList[shaderID].fragmentShader)
-        shaderID = 0;
-
-    if (gpuRenderState && (gpuStateTexture != texture || gpuStateShader != shaderID)) {
-        SDL_DestroyGPURenderState(gpuRenderState);
-        gpuRenderState = nullptr;
-    }
-
-    if (!gpuRenderState) {
-        SDL_PropertiesID properties = SDL_GetTextureProperties(texture);
-        SDL_GPUTexture *gpuTexture =
-            (SDL_GPUTexture *)SDL_GetPointerProperty(properties, SDL_PROP_TEXTURE_GPU_TEXTURE_POINTER, nullptr);
-        if (!gpuTexture) {
-            PrintLog(PRINT_ERROR, "[SDL3] Failed to get GPU texture: %s", SDL_GetError());
-            return false;
-        }
-
-        SDL_GPUTextureSamplerBinding samplerBinding = {
-            gpuTexture,
-            shaderList[shaderID].linear || videoSettings.screenCount > 1 ? samplerLinear : samplerPoint,
-        };
-        SDL_GPURenderStateCreateInfo createInfo = {};
-        createInfo.fragment_shader = shaderList[shaderID].fragmentShader;
-        createInfo.num_sampler_bindings = 1;
-        createInfo.sampler_bindings = &samplerBinding;
-        gpuRenderState = SDL_CreateGPURenderState(renderer, &createInfo);
-        if (!gpuRenderState) {
-            PrintLog(PRINT_NORMAL, "[SDL3] Failed to create render state for %s: %s", shaderList[shaderID].name, SDL_GetError());
-            return false;
-        }
-        gpuStateTexture = texture;
-        gpuStateShader = shaderID;
-    }
-
-    struct ShaderConstants {
-        float2 pixelSize;
-        float2 textureSize;
-        float2 viewSize;
-        float screenDim;
-    } uniforms = { pixelSize, textureSize, viewSize, videoSettings.dimMax * videoSettings.dimPercent };
-
-    if (!SDL_SetGPURenderStateFragmentUniforms(gpuRenderState, 0, &uniforms, sizeof(uniforms))
-        || !SDL_SetGPURenderState(renderer, gpuRenderState)) {
-        PrintLog(PRINT_NORMAL, "[SDL3] Failed to set render state: %s", SDL_GetError());
-        return false;
-    }
-
-    return true;
-}
-
 void RenderDevice::ReleaseShaders()
 {
-    if (gpuRenderState) {
-        SDL_DestroyGPURenderState(gpuRenderState);
-        gpuRenderState = nullptr;
-    }
-    gpuStateTexture = nullptr;
-    gpuStateShader = -1;
-
     for (int32 i = 0; i < shaderCount; ++i) {
-        if (shaderList[i].fragmentShader) {
-            SDL_ReleaseGPUShader(gpuDevice, shaderList[i].fragmentShader);
-            shaderList[i].fragmentShader = nullptr;
+        if (shaderList[i].renderState) {
+            SDL_DestroyGPURenderState(shaderList[i].renderState);
+            shaderList[i].renderState = nullptr;
         }
     }
     shaderCount = 0;
@@ -224,6 +156,24 @@ void RenderDevice::FlipScreen()
 
 #if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
     SetLinear();
+    if (videoSettings.shaderSupport) {
+        int32 shaderID = videoSettings.shaderID;
+        if (shaderID < 0 || shaderID >= shaderCount || !shaderList[shaderID].renderState)
+            shaderID = 0;
+
+        struct ShaderConstants {
+            float2 pixelSize;
+            float2 textureSize;
+            float2 viewSize;
+            float screenDim;
+        } uniforms = { pixelSize, textureSize, viewSize, videoSettings.dimMax * videoSettings.dimPercent };
+
+        if (!SDL_SetGPURenderStateFragmentUniforms(shaderList[shaderID].renderState, 0, &uniforms, sizeof(uniforms))
+            || !SDL_SetGPURenderState(renderer, shaderList[shaderID].renderState)) {
+            PrintLog(PRINT_NORMAL, "[SDL3] Failed to set render state: %s", SDL_GetError());
+            SDL_SetGPURenderState(renderer, nullptr);
+        }
+    }
 #define SET_GPU_STATE(texture)                                                                                                                       \
     do {                                                                                                                                              \
         if (gpuDevice) {                                                                                                                              \
@@ -242,7 +192,6 @@ void RenderDevice::FlipScreen()
             startVert = 18;
 #endif
             vertColor = GetFColor(vertexBuffer[startVert].color);
-            SET_GPU_STATE(imageTexture);
             SDL_RenderGeometryRaw(renderer, imageTexture, &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
                                   &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
@@ -250,7 +199,6 @@ void RenderDevice::FlipScreen()
 
         case 1:
             vertColor = GetFColor(vertexBuffer[startVert].color);
-            SET_GPU_STATE(screenTexture[0]);
             SDL_RenderGeometryRaw(renderer, screenTexture[0], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
                                   &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
@@ -263,7 +211,6 @@ void RenderDevice::FlipScreen()
             startVert = 6;
 #endif
             vertColor = GetFColor(vertexBuffer[startVert].color);
-            SET_GPU_STATE(screenTexture[0]);
             SDL_RenderGeometryRaw(renderer, screenTexture[0], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
                                   &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
@@ -274,7 +221,6 @@ void RenderDevice::FlipScreen()
             startVert = 12;
 #endif
             vertColor = GetFColor(vertexBuffer[startVert].color);
-            SET_GPU_STATE(screenTexture[1]);
             SDL_RenderGeometryRaw(renderer, screenTexture[1], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
                                   &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
@@ -284,21 +230,18 @@ void RenderDevice::FlipScreen()
         case 3:
             startVert = startVertex_3P[0];
             vertColor = GetFColor(vertexBuffer[startVert].color);
-            SET_GPU_STATE(screenTexture[0]);
             SDL_RenderGeometryRaw(renderer, screenTexture[0], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
                                   &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
 
             startVert = startVertex_3P[1];
             vertColor = GetFColor(vertexBuffer[startVert].color);
-            SET_GPU_STATE(screenTexture[1]);
             SDL_RenderGeometryRaw(renderer, screenTexture[1], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
                                   &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
 
             startVert = startVertex_3P[2];
             vertColor = GetFColor(vertexBuffer[startVert].color);
-            SET_GPU_STATE(screenTexture[2]);
             SDL_RenderGeometryRaw(renderer, screenTexture[2], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
                                   &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
@@ -307,7 +250,6 @@ void RenderDevice::FlipScreen()
         case 4:
             startVert = 30;
             vertColor = GetFColor(vertexBuffer[startVert].color);
-            SET_GPU_STATE(screenTexture[0]);
             SDL_RenderGeometryRaw(renderer, screenTexture[0], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
                                   &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
@@ -315,21 +257,18 @@ void RenderDevice::FlipScreen()
             startVert = 36;
             vertColor = GetFColor(vertexBuffer[startVert].color);
 
-            SET_GPU_STATE(screenTexture[1]);
             SDL_RenderGeometryRaw(renderer, screenTexture[1], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
                                   &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
 
             startVert = 42;
             vertColor = GetFColor(vertexBuffer[startVert].color);
-            SET_GPU_STATE(screenTexture[2]);
             SDL_RenderGeometryRaw(renderer, screenTexture[2], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
                                   &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
 
             startVert = 48;
             vertColor = GetFColor(vertexBuffer[startVert].color);
-            SET_GPU_STATE(screenTexture[3]);
             SDL_RenderGeometryRaw(renderer, screenTexture[3], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
                                   &vertColor, 0, &vertexBuffer[startVert].tex.x,
                                   sizeof(RenderVertex), 6, NULL, 0, 0);
@@ -452,16 +391,6 @@ void RenderDevice::Release(bool32 isRefresh)
 {
 #if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
     ReleaseShaders();
-    if (!isRefresh) {
-        if (samplerPoint) {
-            SDL_ReleaseGPUSampler(gpuDevice, samplerPoint);
-            samplerPoint = nullptr;
-        }
-        if (samplerLinear) {
-            SDL_ReleaseGPUSampler(gpuDevice, samplerLinear);
-            samplerLinear = nullptr;
-        }
-    }
 #endif
 
     for (int32 s = 0; s < SCREEN_COUNT; ++s) {
@@ -767,9 +696,17 @@ void RenderDevice::LoadShader(const char *fileName, bool32 linear)
         return;
     }
 
+    SDL_GPURenderStateCreateInfo stateInfo = {};
+    stateInfo.fragment_shader = fragmentShader;
+    SDL_GPURenderState *renderState = SDL_CreateGPURenderState(renderer, &stateInfo);
+    if (!renderState) {
+        PrintLog(PRINT_NORMAL, "[SDL3] Failed to create render state for %s: %s", fileName, SDL_GetError());
+        return;
+    }
+
     ShaderEntry *shader = &shaderList[shaderCount++];
     shader->linear = linear;
-    shader->fragmentShader = fragmentShader;
+    shader->renderState = renderState;
     sprintf_s(shader->name, sizeof(shader->name), "%s", fileName);
 #else
     PrintLog(PRINT_NORMAL, "This render device does not support shaders!");
@@ -781,9 +718,6 @@ bool RenderDevice::InitShaders()
 #if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
     if (!gpuDevice || gpuShaderFormat == SDL_GPU_SHADERFORMAT_INVALID) {
         videoSettings.shaderSupport = false;
-    }
-    else {
-        videoSettings.shaderSupport = true;
     }
     shaderCount = 0;
 #endif
@@ -862,34 +796,6 @@ bool RenderDevice::SetupRendering()
         PrintLog(PRINT_NORMAL, "ERROR: failed to create renderer!");
         return false;
     }
-
-#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
-    if (gpuDevice) {
-        SDL_GPUSamplerCreateInfo samplerInfo = {};
-        samplerInfo.min_filter = SDL_GPU_FILTER_NEAREST;
-        samplerInfo.mag_filter = SDL_GPU_FILTER_NEAREST;
-        samplerInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_NEAREST;
-        samplerInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-        samplerInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-        samplerInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-        samplerInfo.max_lod = 1.0f;
-        samplerPoint = SDL_CreateGPUSampler(gpuDevice, &samplerInfo);
-        samplerInfo.min_filter = SDL_GPU_FILTER_LINEAR;
-        samplerInfo.mag_filter = SDL_GPU_FILTER_LINEAR;
-        samplerInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR;
-        samplerLinear = SDL_CreateGPUSampler(gpuDevice, &samplerInfo);
-        if (!samplerPoint || !samplerLinear) {
-            PrintLog(PRINT_NORMAL, "[SDL3] Failed to create GPU samplers: %s", SDL_GetError());
-            if (samplerPoint)
-                SDL_ReleaseGPUSampler(gpuDevice, samplerPoint);
-            if (samplerLinear)
-                SDL_ReleaseGPUSampler(gpuDevice, samplerLinear);
-            samplerPoint = nullptr;
-            samplerLinear = nullptr;
-            gpuShaderFormat = SDL_GPU_SHADERFORMAT_INVALID;
-        }
-    }
-#endif
 
     GetDisplays();
 
@@ -1342,16 +1248,8 @@ bool RenderDevice::ProcessEvents()
 
 void RenderDevice::SetupImageTexture(int32 width, int32 height, uint8 *imagePixels)
 {
-    if (lastTextureFormat != SHADER_RGB_IMAGE) {
-        if (imageTexture)
-            SDL_DestroyTexture(imageTexture);
-        SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_LINEAR);
-
-        imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
-        SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_NEAREST);
-
+    if (lastTextureFormat != SHADER_RGB_IMAGE)
         lastTextureFormat = SHADER_RGB_IMAGE;
-    }
 
     int32 texPitch = 0;
     uint32 *pixels = NULL;
@@ -1373,48 +1271,183 @@ void RenderDevice::SetupImageTexture(int32 width, int32 height, uint8 *imagePixe
 void RenderDevice::SetupVideoTexture_YUV420(int32 width, int32 height, uint8 *yPlane, uint8 *uPlane, uint8 *vPlane, int32 strideY, int32 strideU,
                                             int32 strideV)
 {
+#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+    if (lastTextureFormat != SHADER_YUV_420)
+        lastTextureFormat = SHADER_YUV_420;
+
+    int32 texPitch = 0;
+    uint32 *pixels = NULL;
+    SDL_LockTexture(imageTexture, NULL, (void **)&pixels, &texPitch);
+
+    uint32 *preY = pixels;
+    int32 pitch = (texPitch >> 2) - width;
+    if (videoSettings.shaderSupport) {
+        for (int32 y = 0; y < height; ++y) {
+            for (int32 x = 0; x < width; ++x) {
+                *pixels++ = (yPlane[x] << 16) | 0xFF000000;
+            }
+
+            pixels += pitch;
+            yPlane += strideY;
+        }
+
+        pixels = preY;
+        pitch  = (texPitch >> 2) - (width >> 1);
+        for (int32 y = 0; y < (height >> 1); ++y) {
+            for (int32 x = 0; x < (width >> 1); ++x) {
+                *pixels++ |= (vPlane[x] << 0) | (uPlane[x] << 8) | 0xFF000000;
+            }
+
+            pixels += pitch;
+            uPlane += strideU;
+            vPlane += strideV;
+        }
+    }
+    else {
+        // No shader support means no YUV support! at least use the brightness to show it in grayscale!
+        for (int32 y = 0; y < height; ++y) {
+            for (int32 x = 0; x < width; ++x) {
+                int32 brightness = yPlane[x];
+                *pixels++        = (brightness << 0) | (brightness << 8) | (brightness << 16) | 0xFF000000;
+            }
+
+            pixels += pitch;
+            yPlane += strideY;
+        }
+    }
+
+    SDL_UnlockTexture(imageTexture);
+#else
     if (lastTextureFormat != SHADER_YUV_420) {
         if (imageTexture)
             SDL_DestroyTexture(imageTexture);
-        SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_LINEAR);
-
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
         imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_YV12, SDL_TEXTUREACCESS_STREAMING, width, height);
-
-        SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_NEAREST);
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
         lastTextureFormat = SHADER_YUV_420;
     }
-
     SDL_UpdateYUVTexture(imageTexture, NULL, yPlane, strideY, uPlane, strideU, vPlane, strideV);
+#endif
 }
 void RenderDevice::SetupVideoTexture_YUV422(int32 width, int32 height, uint8 *yPlane, uint8 *uPlane, uint8 *vPlane, int32 strideY, int32 strideU,
                                             int32 strideV)
 {
+#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+    if (lastTextureFormat != SHADER_YUV_422)
+        lastTextureFormat = SHADER_YUV_422;
+
+    int32 texPitch = 0;
+    uint32 *pixels = NULL;
+    SDL_LockTexture(imageTexture, NULL, (void **)&pixels, &texPitch);
+
+    uint32 *preY = pixels;
+    int32 pitch = (texPitch >> 2) - width;
+    if (videoSettings.shaderSupport) {
+        for (int32 y = 0; y < height; ++y) {
+            for (int32 x = 0; x < width; ++x) {
+                *pixels++ = (yPlane[x] << 16) | 0xFF000000;
+            }
+
+            pixels += pitch;
+            yPlane += strideY;
+        }
+
+        pixels = preY;
+        pitch  = (texPitch >> 2) - (width >> 1);
+        for (int32 y = 0; y < (height >> 1); ++y) {
+            for (int32 x = 0; x < (width >> 1); ++x) {
+                *pixels++ |= (vPlane[x] << 0) | (uPlane[x] << 8) | 0xFF000000;
+            }
+
+            pixels += pitch;
+            uPlane += strideU;
+            vPlane += strideV;
+        }
+    }
+    else {
+        // No shader support means no YUV support! at least use the brightness to show it in grayscale!
+        for (int32 y = 0; y < height; ++y) {
+            for (int32 x = 0; x < width; ++x) {
+                int32 brightness = yPlane[x];
+                *pixels++        = (brightness << 0) | (brightness << 8) | (brightness << 16) | 0xFF000000;
+            }
+
+            pixels += pitch;
+            yPlane += strideY;
+        }
+    }
+
+    SDL_UnlockTexture(imageTexture);
+#else
     if (lastTextureFormat != SHADER_YUV_422) {
         if (imageTexture)
             SDL_DestroyTexture(imageTexture);
-        SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_LINEAR);
-
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
         imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_YV12, SDL_TEXTUREACCESS_STREAMING, width, height);
-
-        SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_NEAREST);
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
         lastTextureFormat = SHADER_YUV_422;
     }
-
     SDL_UpdateYUVTexture(imageTexture, NULL, yPlane, strideY, uPlane, strideU, vPlane, strideV);
+#endif
 }
 void RenderDevice::SetupVideoTexture_YUV444(int32 width, int32 height, uint8 *yPlane, uint8 *uPlane, uint8 *vPlane, int32 strideY, int32 strideU,
                                             int32 strideV)
 {
+#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+    if (lastTextureFormat != SHADER_YUV_444)
+        lastTextureFormat = SHADER_YUV_444;
+
+    int32 texPitch = 0;
+    uint32 *pixels = NULL;
+    SDL_LockTexture(imageTexture, NULL, (void **)&pixels, &texPitch);
+
+    uint32 *preY = pixels;
+    int32 pitch = (texPitch >> 2) - width;
+    if (videoSettings.shaderSupport) {
+        for (int32 y = 0; y < height; ++y) {
+            for (int32 x = 0; x < width; ++x) {
+                *pixels++ = (yPlane[x] << 16) | 0xFF000000;
+            }
+
+            pixels += pitch;
+            yPlane += strideY;
+        }
+
+        pixels = preY;
+        pitch  = (texPitch >> 2) - (width >> 1);
+        for (int32 y = 0; y < (height >> 1); ++y) {
+            for (int32 x = 0; x < (width >> 1); ++x) {
+                *pixels++ |= (vPlane[x] << 0) | (uPlane[x] << 8) | 0xFF000000;
+            }
+
+            pixels += pitch;
+            uPlane += strideU;
+            vPlane += strideV;
+        }
+    }
+    else {
+        // No shader support means no YUV support! at least use the brightness to show it in grayscale!
+        for (int32 y = 0; y < height; ++y) {
+            for (int32 x = 0; x < width; ++x) {
+                int32 brightness = yPlane[x];
+                *pixels++        = (brightness << 0) | (brightness << 8) | (brightness << 16) | 0xFF000000;
+            }
+
+            pixels += pitch;
+            yPlane += strideY;
+        }
+    }
+
+    SDL_UnlockTexture(imageTexture);
+#else
     if (lastTextureFormat != SHADER_YUV_444) {
         if (imageTexture)
             SDL_DestroyTexture(imageTexture);
-        SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_LINEAR);
-
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
         imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_YV12, SDL_TEXTUREACCESS_STREAMING, width, height);
-
-        SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_LINEAR);
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
         lastTextureFormat = SHADER_YUV_444;
     }
-
     SDL_UpdateYUVTexture(imageTexture, NULL, yPlane, strideY, uPlane, strideU, vPlane, strideV);
+#endif
 }
