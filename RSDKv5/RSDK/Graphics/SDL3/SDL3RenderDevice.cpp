@@ -131,7 +131,7 @@ void RenderDevice::CopyFrameBuffer()
         for (int32 y = 0; y < SCREEN_YSIZE; ++y) {
             memcpy(pixels, frameBuffer, screens[s].size.x * sizeof(uint16));
             frameBuffer += screens[s].pitch;
-            pixels += pitch / sizeof(uint16);
+            pixels += (pitch / sizeof(uint16));
         }
 
         SDL_UnlockTexture(screenTexture[s]);
@@ -716,14 +716,13 @@ void RenderDevice::LoadShader(const char *fileName, bool32 linear)
 bool RenderDevice::InitShaders()
 {
 #if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+    videoSettings.shaderSupport = true;
     if (!gpuDevice || gpuShaderFormat == SDL_GPU_SHADERFORMAT_INVALID) {
         videoSettings.shaderSupport = false;
     }
-    shaderCount = 0;
 #endif
     int32 maxShaders = 0;
 #if RETRO_USE_MOD_LOADER
-    // who knows maybe SDL3 will have shaders
     shaderCount = 0;
 #endif
 
@@ -829,7 +828,7 @@ void RenderDevice::GetDisplays()
         displayWidth[a]  = displayMode->w;
         displayHeight[a] = displayMode->h;
 
-        if (memcmp(&currentDisplay, &displayMode, sizeof(displayMode)) == 0) {
+        if (memcmp(&currentDisplay, &displayMode, sizeof(SDL_DisplayMode*)) == 0) {
             displayModeIndex = a;
         }
     }
