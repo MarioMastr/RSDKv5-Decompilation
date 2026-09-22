@@ -94,7 +94,7 @@ if(COMPILE_OGG)
 endif()
 
 if(COMPILE_THEORA)
-    set(THEORA_DIR dependencies/android/libtheora)
+    set(THEORA_DIR dependencies/${DEP_PATH}/libtheora)
 
     add_library(libtheora STATIC
         ${THEORA_DIR}/lib/analyze.c

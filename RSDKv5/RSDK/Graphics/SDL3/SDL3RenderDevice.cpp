@@ -156,7 +156,7 @@ void RenderDevice::FlipScreen()
 
 #if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
     SetLinear();
-    if (videoSettings.shaderSupport) {
+    if (gpuDevice && videoSettings.shaderSupport) {
         int32 shaderID = videoSettings.shaderID;
         if (shaderID < 0 || shaderID >= shaderCount || !shaderList[shaderID].renderState)
             shaderID = 0;
@@ -174,13 +174,6 @@ void RenderDevice::FlipScreen()
             SDL_SetGPURenderState(renderer, nullptr);
         }
     }
-#define SET_GPU_STATE(texture)                                                                                                                       \
-    do {                                                                                                                                              \
-        if (gpuDevice) {                                                                                                                              \
-            if (!SetGPUState(texture))                                                                                                            \
-                SDL_SetGPURenderState(renderer, nullptr);                                                                                            \
-        }                                                                                                                                             \
-    } while (0)
     int32 startVert = 0;
     SDL_FColor vertColor;
     switch (videoSettings.screenCount) {
