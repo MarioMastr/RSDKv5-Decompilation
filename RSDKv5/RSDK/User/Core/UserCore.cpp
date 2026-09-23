@@ -363,6 +363,8 @@ void RSDK::LoadSettingsINI()
 
 #if !RETRO_USE_ORIGINAL_CODE
         customSettings.maxPixWidth = iniparser_getint(ini, "Video:maxPixWidth", DEFAULT_PIXWIDTH);
+        if (customSettings.maxPixWidth && videoSettings.pixWidth > customSettings.maxPixWidth)
+            videoSettings.pixWidth = customSettings.maxPixWidth;
 #endif
 
         engine.streamsEnabled = iniparser_getboolean(ini, "Audio:streamsEnabled", true);

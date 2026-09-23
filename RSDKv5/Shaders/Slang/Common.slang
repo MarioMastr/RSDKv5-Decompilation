@@ -1,5 +1,8 @@
 [[vk::binding(0, 2)]]
-Sampler2D inputTexture : register(s0, space2);
+Texture2D inputTexture : register(t0, space2);
+
+[[vk::binding(0, 2)]]
+SamplerState inputSampler : register(s0, space2);
 
 [[vk::binding(0, 3)]]
 cbuffer ShaderConstants : register(b0, space3)
@@ -20,7 +23,7 @@ struct PixelInput
 
 float4 SampleDiffuse(float2 texCoord)
 {
-    return inputTexture.Sample(texCoord);
+    return inputTexture.Sample(inputSampler, texCoord);
 }
 
 float4 ApplyScreenDim(float4 color)
