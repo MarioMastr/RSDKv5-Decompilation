@@ -1,6 +1,5 @@
 #if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
 struct ShaderEntry : public ShaderEntryBase {
-    SDL_GPUShader *fragmentShader;
     SDL_GPURenderState *renderState;
 };
 #else
