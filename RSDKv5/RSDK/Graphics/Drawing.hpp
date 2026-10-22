@@ -248,6 +248,8 @@ private:
 #include "DX11/DX11RenderDevice.hpp"
 #elif RETRO_RENDERDEVICE_SDL2
 #include "SDL2/SDL2RenderDevice.hpp"
+#elif RETRO_RENDERDEVICE_SDL3
+#include "SDL3/SDL3RenderDevice.hpp"
 #elif RETRO_RENDERDEVICE_GLFW
 #include "GLFW/GLFWRenderDevice.hpp"
 #elif RETRO_RENDERDEVICE_VK
@@ -276,6 +278,7 @@ extern ShaderEntry shaderList[SHADER_COUNT];
 extern VideoSettings videoSettings;
 extern VideoSettings videoSettingsBackup;
 extern bool32 changedVideoSettings;
+extern const RenderVertex rsdkVertexBuffer[RETRO_REV02 ? 60 : 24];
 
 #if RETRO_USE_MOD_LOADER
 extern int32 userShaderCount;

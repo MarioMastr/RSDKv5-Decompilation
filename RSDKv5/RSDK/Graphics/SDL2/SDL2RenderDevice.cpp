@@ -88,7 +88,7 @@ void RenderDevice::CopyFrameBuffer()
         for (int32 y = 0; y < SCREEN_YSIZE; ++y) {
             memcpy(pixels, frameBuffer, screens[s].size.x * sizeof(uint16));
             frameBuffer += screens[s].pitch;
-            pixels += pitch / sizeof(uint16);
+            pixels += (pitch / sizeof(uint16));
         }
 
         SDL_UnlockTexture(screenTexture[s]);
@@ -633,7 +633,7 @@ void RenderDevice::GetDisplays()
         displayWidth[a]  = displayMode.w;
         displayHeight[a] = displayMode.h;
 
-        if (memcmp(&currentDisplay, &displayMode, sizeof(displayMode)) == 0) {
+        if (memcmp(&currentDisplay, &displayMode, sizeof(SDL_DisplayMode*)) == 0) {
             displayModeIndex = a;
         }
     }

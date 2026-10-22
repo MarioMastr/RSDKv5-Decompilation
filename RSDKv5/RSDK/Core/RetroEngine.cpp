@@ -10,6 +10,7 @@ LogicLinkHandle RSDK::linkGameLogic = NULL;
 
 Link::Handle gameLogicHandle = NULL;
 
+
 #if RETRO_PLATFORM == RETRO_ANDROID
 #include <jni.h>
 #include <unistd.h>
@@ -1286,8 +1287,12 @@ void RSDK::InitGameLink()
             char buffer[0x100];
 #if RETRO_PLATFORM == RETRO_WIN
             strcpy_s(buffer, 0x100, gameLogicName);
+#elif RETRO_PLATFORM == RETRO_OSX
+#if RETRO_RESOURCES
+            sprintf(buffer, "%s/%s", getBundleFrameworksPath(), gameLogicName);
+#endif
 #else
-        sprintf(buffer, "%s%s", SKU::userFileDir, gameLogicName);
+            sprintf(buffer, "%s%s", SKU::userFileDir, gameLogicName);
 #endif
             if (!gameLogicHandle)
                 gameLogicHandle = Link::Open(buffer);

@@ -3,7 +3,7 @@ using namespace RSDK;
 
 #define NORMALIZE(val, minVal, maxVal) ((float)(val) - (float)(minVal)) / ((float)(maxVal) - (float)(minVal))
 
-bool32 getControllerButton(RSDK::SKU::InputDeviceSDL *device, uint8 buttonID)
+bool32 getControllerButton(RSDK::SKU::InputDeviceSDL2 *device, uint8 buttonID)
 {
     if (buttonID == (uint8)SDL_CONTROLLER_BUTTON_INVALID || !device)
         return false;
@@ -14,7 +14,7 @@ bool32 getControllerButton(RSDK::SKU::InputDeviceSDL *device, uint8 buttonID)
     return false;
 }
 
-void RSDK::SKU::InputDeviceSDL::UpdateInput()
+void RSDK::SKU::InputDeviceSDL2::UpdateInput()
 {
     int32 buttonMap[] = {
         SDL_CONTROLLER_BUTTON_DPAD_UP,   SDL_CONTROLLER_BUTTON_DPAD_DOWN,  SDL_CONTROLLER_BUTTON_DPAD_LEFT,    SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
@@ -110,7 +110,7 @@ void RSDK::SKU::InputDeviceSDL::UpdateInput()
     ProcessInput(CONT_ANY);
 }
 
-void RSDK::SKU::InputDeviceSDL::ProcessInput(int32 controllerID)
+void RSDK::SKU::InputDeviceSDL2::ProcessInput(int32 controllerID)
 {
     controller[controllerID].keyUp.press |= this->stateUp;
     controller[controllerID].keyDown.press |= this->stateDown;
@@ -174,7 +174,7 @@ void RSDK::SKU::InputDeviceSDL::ProcessInput(int32 controllerID)
 #endif
 }
 
-void RSDK::SKU::InputDeviceSDL::CloseDevice()
+void RSDK::SKU::InputDeviceSDL2::CloseDevice()
 {
     this->active     = false;
     this->isAssigned = false;
@@ -182,7 +182,7 @@ void RSDK::SKU::InputDeviceSDL::CloseDevice()
     this->controllerPtr = NULL;
 }
 
-RSDK::SKU::InputDeviceSDL *RSDK::SKU::InitSDL2InputDevice(uint32 id, SDL_GameController *game_controller)
+RSDK::SKU::InputDeviceSDL2 *RSDK::SKU::InitSDL2InputDevice(uint32 id, SDL_GameController *game_controller)
 {
     if (inputDeviceCount >= INPUTDEVICE_COUNT)
         return NULL;
@@ -193,9 +193,9 @@ RSDK::SKU::InputDeviceSDL *RSDK::SKU::InitSDL2InputDevice(uint32 id, SDL_GameCon
     if (inputDeviceList[inputDeviceCount])
         delete inputDeviceList[inputDeviceCount];
 
-    inputDeviceList[inputDeviceCount] = new InputDeviceSDL();
+    inputDeviceList[inputDeviceCount] = new InputDeviceSDL2();
 
-    InputDeviceSDL *device = (InputDeviceSDL *)inputDeviceList[inputDeviceCount];
+    InputDeviceSDL2 *device = (InputDeviceSDL2 *)inputDeviceList[inputDeviceCount];
 
     device->controllerPtr = game_controller;
 
@@ -237,7 +237,7 @@ void RSDK::SKU::InitSDL2InputAPI()
 {
     SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC);
 
-    char path[0x100]; 
+    char path[0x100];
     sprintf_s(path, sizeof(path), "%sgamecontrollerdb.txt", SKU::userFileDir);
     SDL_GameControllerAddMappingsFromFile(path);
 }

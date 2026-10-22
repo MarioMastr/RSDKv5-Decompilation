@@ -1,0 +1,1445 @@
+
+SDL_Window *RenderDevice::window     = nullptr;
+SDL_Renderer *RenderDevice::renderer = nullptr;
+SDL_Texture *RenderDevice::screenTexture[SCREEN_COUNT];
+
+SDL_Texture *RenderDevice::imageTexture = nullptr;
+
+#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+SDL_GPUDevice *RenderDevice::gpuDevice = nullptr;
+SDL_GPUShaderFormat RenderDevice::gpuShaderFormat = SDL_GPU_SHADERFORMAT_INVALID;
+#endif
+
+uint32 RenderDevice::displayModeIndex = 0;
+int32 RenderDevice::displayModeCount  = 0;
+
+unsigned long long RenderDevice::targetFreq = 0;
+unsigned long long RenderDevice::curTicks   = 0;
+unsigned long long RenderDevice::prevTicks  = 0;
+
+RenderVertex RenderDevice::vertexBuffer[!RETRO_REV02 ? 24 : 60];
+
+uint8 RenderDevice::lastTextureFormat = -1;
+
+#define NORMALIZE(val, minVal, maxVal) ((float)(val) - (float)(minVal)) / ((float)(maxVal) - (float)(minVal))
+
+SDL_FColor RenderDevice::GetFColor(uint32 color) {
+    SDL_Color *c = (SDL_Color *)&color;
+
+    SDL_FColor fc{};
+    fc.r = (float)c->r / 255.0f;
+    fc.g = (float)c->g / 255.0f;
+    fc.b = (float)c->b / 255.0f;
+    fc.a = (float)c->a / 255.0f;
+
+    return fc;
+}
+
+#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+void RenderDevice::SetLinear()
+{
+    int32 shaderID = videoSettings.shaderID;
+    if (shaderID < 0 || shaderID >= shaderCount)
+        shaderID = 0;
+
+    SDL_ScaleMode scaleMode = shaderList[shaderID].linear ? SDL_SCALEMODE_LINEAR : SDL_SCALEMODE_NEAREST;
+    for (int32 s = 0; s < SCREEN_COUNT; ++s) {
+        if (screenTexture[s])
+            SDL_SetTextureScaleMode(screenTexture[s], scaleMode);
+    }
+    if (imageTexture)
+        SDL_SetTextureScaleMode(imageTexture, scaleMode);
+}
+
+void RenderDevice::ReleaseShaders()
+{
+    for (int32 i = 0; i < shaderCount; ++i) {
+        if (shaderList[i].renderState) {
+            SDL_DestroyGPURenderState(shaderList[i].renderState);
+            shaderList[i].renderState = nullptr;
+        }
+    }
+    shaderCount = 0;
+}
+#endif
+
+bool RenderDevice::Init()
+{
+    const char *gameTitle = gameVerInfo.gameTitle;
+
+    SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+
+    uint8 flags = 0;
+
+#if RETRO_PLATFORM == RETRO_ANDROID
+    videoSettings.windowed = false;
+    SDL_DisplayMode dm;
+    SDL_GetDesktopDisplayMode(0, &dm);
+    float hdp = 0, vdp = 0;
+
+    bool landscape = dm.h < dm.w;
+    int32 h        = landscape ? dm.w : dm.h;
+    int32 w        = landscape ? dm.h : dm.w;
+
+    videoSettings.windowWidth = ((float)SCREEN_YSIZE * h / w);
+
+#elif RETRO_PLATFORM == RETRO_SWITCH
+    videoSettings.windowed     = false;
+    videoSettings.windowWidth  = 1920;
+    videoSettings.windowHeight = 1080;
+    flags |= SDL_WINDOW_FULLSCREEN;
+#endif
+
+    SDL_SetHint(SDL_HINT_RENDER_VSYNC, videoSettings.vsync ? "1" : "0");
+
+    window = SDL_CreateWindow(gameTitle, videoSettings.windowWidth, videoSettings.windowHeight, SDL_WINDOW_HIGH_PIXEL_DENSITY | flags);
+
+    if (!window) {
+        PrintLog(PRINT_NORMAL, "ERROR: failed to create window!");
+        return false;
+    }
+
+    if (!videoSettings.windowed) {
+        SDL_RestoreWindow(window);
+        SDL_SetWindowFullscreen(window, true);
+        SDL_HideCursor();
+    }
+
+    if (!videoSettings.bordered) {
+        SDL_RestoreWindow(window);
+        SDL_SetWindowBordered(window, false);
+    }
+
+    PrintLog(PRINT_NORMAL, "w: %d h: %d windowed: %d", videoSettings.windowWidth, videoSettings.windowHeight, videoSettings.windowed);
+
+    if (!SetupRendering() || !AudioDevice::Init())
+        return false;
+
+    InitInputDevices();
+    return true;
+}
+
+void RenderDevice::CopyFrameBuffer()
+{
+    int32 pitch    = 0;
+    uint16 *pixels = NULL;
+
+    for (int32 s = 0; s < videoSettings.screenCount; ++s) {
+        SDL_LockTexture(screenTexture[s], NULL, (void **)&pixels, &pitch);
+
+        uint16 *frameBuffer = screens[s].frameBuffer;
+        for (int32 y = 0; y < SCREEN_YSIZE; ++y) {
+            memcpy(pixels, frameBuffer, screens[s].size.x * sizeof(uint16));
+            frameBuffer += screens[s].pitch;
+            pixels += (pitch / sizeof(uint16));
+        }
+
+        SDL_UnlockTexture(screenTexture[s]);
+    }
+}
+
+void RenderDevice::FlipScreen()
+{
+    if (windowRefreshDelay > 0) {
+        windowRefreshDelay--;
+        if (!windowRefreshDelay)
+            UpdateGameWindow();
+        return;
+    }
+
+    float dimAmount = videoSettings.dimMax * videoSettings.dimPercent;
+
+    // Clear the screen. This is needed to keep the
+    // pillarboxes in fullscreen from displaying garbage data.
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0xFF);
+    SDL_RenderClear(renderer);
+
+#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+    SetLinear();
+    if (gpuDevice && videoSettings.shaderSupport) {
+        int32 shaderID = videoSettings.shaderID;
+        if (shaderID < 0 || shaderID >= shaderCount || !shaderList[shaderID].renderState)
+            shaderID = 0;
+
+        struct ShaderConstants {
+            float2 pixelSize;
+            float2 textureSize;
+            float2 viewSize;
+            float screenDim;
+        } uniforms = { pixelSize, textureSize, viewSize, videoSettings.dimMax * videoSettings.dimPercent };
+
+        if (!SDL_SetGPURenderStateFragmentUniforms(shaderList[shaderID].renderState, 0, &uniforms, sizeof(uniforms))
+            || !SDL_SetGPURenderState(renderer, shaderList[shaderID].renderState)) {
+            PrintLog(PRINT_NORMAL, "[SDL3] Failed to set render state: %s", SDL_GetError());
+            SDL_SetGPURenderState(renderer, nullptr);
+        }
+    }
+    int32 startVert = 0;
+    SDL_FColor vertColor;
+    switch (videoSettings.screenCount) {
+        default:
+        case 0:
+#if RETRO_REV02
+            startVert = 54;
+#else
+            startVert = 18;
+#endif
+            vertColor = GetFColor(vertexBuffer[startVert].color);
+            SDL_RenderGeometryRaw(renderer, imageTexture, &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
+                                  sizeof(RenderVertex), 6, NULL, 0, 0);
+            break;
+
+        case 1:
+            vertColor = GetFColor(vertexBuffer[startVert].color);
+            SDL_RenderGeometryRaw(renderer, screenTexture[0], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
+                                  sizeof(RenderVertex), 6, NULL, 0, 0);
+            break;
+
+        case 2:
+#if RETRO_REV02
+            startVert = startVertex_2P[0];
+#else
+            startVert = 6;
+#endif
+            vertColor = GetFColor(vertexBuffer[startVert].color);
+            SDL_RenderGeometryRaw(renderer, screenTexture[0], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
+                                  sizeof(RenderVertex), 6, NULL, 0, 0);
+
+#if RETRO_REV02
+            startVert = startVertex_2P[1];
+#else
+            startVert = 12;
+#endif
+            vertColor = GetFColor(vertexBuffer[startVert].color);
+            SDL_RenderGeometryRaw(renderer, screenTexture[1], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
+                                  sizeof(RenderVertex), 6, NULL, 0, 0);
+            break;
+
+#if RETRO_REV02
+        case 3:
+            startVert = startVertex_3P[0];
+            vertColor = GetFColor(vertexBuffer[startVert].color);
+            SDL_RenderGeometryRaw(renderer, screenTexture[0], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
+                                  sizeof(RenderVertex), 6, NULL, 0, 0);
+
+            startVert = startVertex_3P[1];
+            vertColor = GetFColor(vertexBuffer[startVert].color);
+            SDL_RenderGeometryRaw(renderer, screenTexture[1], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
+                                  sizeof(RenderVertex), 6, NULL, 0, 0);
+
+            startVert = startVertex_3P[2];
+            vertColor = GetFColor(vertexBuffer[startVert].color);
+            SDL_RenderGeometryRaw(renderer, screenTexture[2], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
+                                  sizeof(RenderVertex), 6, NULL, 0, 0);
+            break;
+
+        case 4:
+            startVert = 30;
+            vertColor = GetFColor(vertexBuffer[startVert].color);
+            SDL_RenderGeometryRaw(renderer, screenTexture[0], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
+                                  sizeof(RenderVertex), 6, NULL, 0, 0);
+
+            startVert = 36;
+            vertColor = GetFColor(vertexBuffer[startVert].color);
+
+            SDL_RenderGeometryRaw(renderer, screenTexture[1], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
+                                  sizeof(RenderVertex), 6, NULL, 0, 0);
+
+            startVert = 42;
+            vertColor = GetFColor(vertexBuffer[startVert].color);
+            SDL_RenderGeometryRaw(renderer, screenTexture[2], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
+                                  sizeof(RenderVertex), 6, NULL, 0, 0);
+
+            startVert = 48;
+            vertColor = GetFColor(vertexBuffer[startVert].color);
+            SDL_RenderGeometryRaw(renderer, screenTexture[3], &vertexBuffer[startVert].pos.x, sizeof(RenderVertex),
+                                  &vertColor, 0, &vertexBuffer[startVert].tex.x,
+                                  sizeof(RenderVertex), 6, NULL, 0, 0);
+            break;
+#endif
+    }
+#else
+    int32 startVert = 0;
+    SDL_FRect src, dst;
+
+    // some cheating for today
+#define _SET_RECTS                                                                                                                                   \
+    dst.x = vertexBuffer[startVert].pos.x;                                                                                                           \
+    dst.y = vertexBuffer[startVert].pos.y;                                                                                                           \
+    dst.w = vertexBuffer[startVert + 2].pos.x - dst.x;                                                                                               \
+    dst.h = vertexBuffer[startVert + 2].pos.y - dst.y;                                                                                               \
+    src.x = vertexBuffer[startVert].tex.x * textureSize.x;                                                                                           \
+    src.y = vertexBuffer[startVert].tex.y * textureSize.y;                                                                                           \
+    src.w = vertexBuffer[startVert + 2].tex.x * textureSize.x - src.x;                                                                               \
+    src.h = vertexBuffer[startVert + 2].tex.y * textureSize.y - src.y;
+
+    switch (videoSettings.screenCount) {
+        default:
+        case 0:
+#if RETRO_REV02
+            startVert = 54;
+#else
+            startVert = 18;
+#endif
+            _SET_RECTS;
+            src.w = vertexBuffer[startVert + 2].tex.x * 1024 - src.x;
+            src.h = vertexBuffer[startVert + 2].tex.y * 512 - src.y;
+            SDL_RenderTexture(renderer, imageTexture, &src, &dst);
+            break;
+
+        case 1:
+            startVert = 0;
+            _SET_RECTS;
+
+            SDL_RenderTexture(renderer, screenTexture[0], &src, &dst);
+            break;
+
+        case 2:
+#if RETRO_REV02
+            startVert = startVertex_2P[0];
+#else
+            startVert = 6;
+#endif
+            _SET_RECTS;
+
+            SDL_RenderTexture(renderer, screenTexture[0], &src, &dst);
+
+#if RETRO_REV02
+            startVert = startVertex_2P[1];
+#else
+            startVert = 12;
+#endif
+            _SET_RECTS;
+
+            SDL_RenderTexture(renderer, screenTexture[1], &src, &dst);
+            break;
+
+#if RETRO_REV02
+        case 3:
+            startVert = startVertex_3P[0];
+            _SET_RECTS;
+
+            SDL_RenderTexture(renderer, screenTexture[0], &src, &dst);
+
+            startVert = startVertex_3P[1];
+            _SET_RECTS;
+
+            SDL_RenderTexture(renderer, screenTexture[1], &src, &dst);
+
+            startVert = startVertex_3P[2];
+            _SET_RECTS;
+
+            SDL_RenderTexture(renderer, screenTexture[2], &src, &dst);
+
+            break;
+
+        case 4:
+            startVert = 30;
+            _SET_RECTS;
+
+            SDL_RenderTexture(renderer, screenTexture[0], &src, &dst);
+
+            startVert = 36;
+            _SET_RECTS;
+
+            SDL_RenderTexture(renderer, screenTexture[1], &src, &dst);
+
+            startVert = 42;
+            _SET_RECTS;
+
+            SDL_RenderTexture(renderer, screenTexture[2], &src, &dst);
+
+            startVert = 48;
+            _SET_RECTS;
+
+            SDL_RenderTexture(renderer, screenTexture[3], &src, &dst);
+
+            break;
+#endif
+    }
+#endif
+#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+#undef SET_GPU_STATE
+SDL_SetGPURenderState(renderer, nullptr);
+#endif
+    if (dimAmount < 1.0f) {
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0xFF - (dimAmount * 0xFF));
+        SDL_RenderFillRect(renderer, NULL);
+    }
+    // no change here
+    SDL_RenderPresent(renderer);
+}
+
+void RenderDevice::Release(bool32 isRefresh)
+{
+#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+    ReleaseShaders();
+#endif
+
+    for (int32 s = 0; s < SCREEN_COUNT; ++s) {
+        if (screenTexture[s])
+            SDL_DestroyTexture(screenTexture[s]);
+        screenTexture[s] = NULL;
+    }
+
+    if (imageTexture)
+        SDL_DestroyTexture(imageTexture);
+    imageTexture = NULL;
+
+    if (!isRefresh) {
+        if (displayInfo.displays)
+            free(displayInfo.displays);
+        displayInfo.displays = NULL;
+    }
+
+    if (!isRefresh && renderer) {
+        SDL_DestroyRenderer(renderer);
+        renderer = nullptr;
+    }
+
+#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+    if (!isRefresh && gpuDevice) {
+        SDL_DestroyGPUDevice(gpuDevice);
+        gpuDevice = nullptr;
+    }
+#endif
+
+    if (!isRefresh && window)
+        SDL_DestroyWindow(window);
+
+    if (!isRefresh)
+        SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+
+    if (!isRefresh) {
+        if (scanlines)
+            free(scanlines);
+        scanlines = NULL;
+    }
+}
+
+void RenderDevice::RefreshWindow()
+{
+    videoSettings.windowState = WINDOWSTATE_UNINITIALIZED;
+
+    Release(true);
+
+    SDL_HideWindow(window);
+
+    if (videoSettings.windowed && videoSettings.bordered)
+        SDL_SetWindowBordered(window, true);
+    else
+        SDL_SetWindowBordered(window, false);
+
+    GetDisplays();
+
+    SDL_Rect winRect;
+    winRect.x = SDL_WINDOWPOS_CENTERED;
+    winRect.y = SDL_WINDOWPOS_CENTERED;
+    if (videoSettings.windowed || !videoSettings.exclusiveFS) {
+        SDL_DisplayID currentWindowDisplay = SDL_GetDisplayForWindow(window);
+        const SDL_DisplayMode *displayMode = SDL_GetCurrentDisplayMode(currentWindowDisplay);
+
+        if (videoSettings.windowed) {
+            if (videoSettings.windowWidth >= displayMode->w || videoSettings.windowHeight >= displayMode->h) {
+                videoSettings.windowWidth  = (displayMode->h / 480 * videoSettings.pixWidth);
+                videoSettings.windowHeight = displayMode->h / 480 * videoSettings.pixHeight;
+            }
+
+            winRect.w = videoSettings.windowWidth;
+            winRect.h = videoSettings.windowHeight;
+            SDL_SetWindowFullscreen(window, false);
+            SDL_HideCursor();
+        }
+        else {
+            winRect.w = displayMode->w;
+            winRect.h = displayMode->h;
+            SDL_SetWindowFullscreen(window, true);
+            SDL_ShowCursor();
+        }
+
+        SDL_SetWindowSize(window, winRect.w, winRect.h);
+        SDL_SetWindowPosition(window, winRect.x, winRect.y);
+    }
+
+    SDL_ShowWindow(window);
+
+    if (!InitGraphicsAPI() || !InitShaders())
+        return;
+
+    videoSettings.windowState = WINDOWSTATE_ACTIVE;
+}
+
+void RenderDevice::InitFPSCap()
+{
+    targetFreq = SDL_GetPerformanceFrequency() / videoSettings.refreshRate;
+    curTicks   = 0;
+    prevTicks  = 0;
+}
+bool RenderDevice::CheckFPSCap()
+{
+    curTicks = SDL_GetPerformanceCounter();
+    if (curTicks >= prevTicks + targetFreq)
+        return true;
+
+    return false;
+}
+void RenderDevice::UpdateFPSCap() { prevTicks = curTicks; }
+
+void RenderDevice::InitVertexBuffer()
+{
+    RenderVertex vertBuffer[sizeof(rsdkVertexBuffer) / sizeof(RenderVertex)];
+    memcpy(vertBuffer, rsdkVertexBuffer, sizeof(rsdkVertexBuffer));
+
+    // ignore the last 6 verts, they're scaled to the 1024x512 textures already!
+    int32 vertCount = (RETRO_REV02 ? 60 : 24) - 6;
+
+    // Regular in-game screen de-normalization stuff
+    for (int32 v = 0; v < vertCount; ++v) {
+        RenderVertex *vertex = &vertBuffer[v];
+        vertex->pos.x        = NORMALIZE(vertex->pos.x, -1.0, 1.0) * videoSettings.pixWidth;
+        vertex->pos.y        = (1.0 - NORMALIZE(vertex->pos.y, -1.0, 1.0)) * SCREEN_YSIZE;
+
+        if (vertex->tex.x)
+            vertex->tex.x = screens[0].size.x * (1.0 / textureSize.x);
+
+        if (vertex->tex.y)
+            vertex->tex.y = screens[0].size.y * (1.0 / textureSize.y);
+    }
+
+    // Fullscreen Image/Video de-normalization stuff
+    for (int32 v = 0; v < 6; ++v) {
+        RenderVertex *vertex = &vertBuffer[vertCount + v];
+        vertex->pos.x        = NORMALIZE(vertex->pos.x, -1.0, 1.0) * videoSettings.pixWidth;
+        vertex->pos.y        = (1.0 - NORMALIZE(vertex->pos.y, -1.0, 1.0)) * SCREEN_YSIZE;
+
+        // Set the texture to fill the entire screen with all 1024x512 pixels
+        if (vertex->tex.x)
+            vertex->tex.x = 1.0f;
+
+        if (vertex->tex.y)
+            vertex->tex.y = 1.0f;
+    }
+
+    memcpy(vertexBuffer, vertBuffer, sizeof(vertBuffer));
+}
+
+bool RenderDevice::InitGraphicsAPI()
+{
+    viewSize.x = 0;
+    viewSize.y = 0;
+
+    if (videoSettings.windowed || !videoSettings.exclusiveFS) {
+        if (videoSettings.windowed) {
+            viewSize.x = videoSettings.windowWidth;
+            viewSize.y = videoSettings.windowHeight;
+        }
+        else {
+            viewSize.x = displayWidth[displayModeIndex];
+            viewSize.y = displayHeight[displayModeIndex];
+        }
+    }
+    else {
+        int32 bufferWidth  = videoSettings.fsWidth;
+        int32 bufferHeight = videoSettings.fsHeight;
+        if (videoSettings.fsWidth <= 0 || videoSettings.fsHeight <= 0) {
+            bufferWidth  = displayWidth[displayModeIndex];
+            bufferHeight = displayHeight[displayModeIndex];
+        }
+
+        viewSize.x = bufferWidth;
+        viewSize.y = bufferHeight;
+    }
+
+    SDL_SetWindowSize(window, viewSize.x, viewSize.y);
+    SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+
+    int32 maxPixHeight = 0;
+#if !RETRO_USE_ORIGINAL_CODE
+    int32 screenWidth = 0;
+#endif
+    for (int32 s = 0; s < SCREEN_COUNT; ++s) {
+        if (videoSettings.pixHeight > maxPixHeight)
+            maxPixHeight = videoSettings.pixHeight;
+
+        screens[s].size.y = videoSettings.pixHeight;
+
+        float viewAspect = viewSize.x / viewSize.y;
+#if !RETRO_USE_ORIGINAL_CODE
+        screenWidth = (int32)((viewAspect * videoSettings.pixHeight) + 3) & 0xFFFFFFFC;
+#else
+        int32 screenWidth = (int32)((viewAspect * videoSettings.pixHeight) + 3) & 0xFFFFFFFC;
+#endif
+        if (screenWidth < videoSettings.pixWidth)
+            screenWidth = videoSettings.pixWidth;
+
+#if !RETRO_USE_ORIGINAL_CODE
+        if (customSettings.maxPixWidth && screenWidth > customSettings.maxPixWidth)
+            screenWidth = customSettings.maxPixWidth;
+#else
+        if (screenWidth > DEFAULT_PIXWIDTH)
+            screenWidth = DEFAULT_PIXWIDTH;
+#endif
+
+        memset(&screens[s].frameBuffer, 0, sizeof(screens[s].frameBuffer));
+        SetScreenSize(s, screenWidth, screens[s].size.y);
+    }
+
+    pixelSize.x = screens[0].size.x;
+    pixelSize.y = screens[0].size.y;
+
+    SDL_SetRenderLogicalPresentation(renderer, videoSettings.pixWidth, SCREEN_YSIZE, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+#if !RETRO_USE_ORIGINAL_CODE
+    if (screenWidth <= 512 && maxPixHeight <= 256) {
+#else
+    if (maxPixHeight <= 256) {
+#endif
+        textureSize.x = 512.0;
+        textureSize.y = 256.0;
+    }
+    else {
+        textureSize.x = 1024.0;
+        textureSize.y = 512.0;
+    }
+    for (int32 s = 0; s < SCREEN_COUNT; ++s) {
+        screenTexture[s] = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, textureSize.x, textureSize.y);
+
+        SDL_SetTextureScaleMode(screenTexture[s], SDL_SCALEMODE_NEAREST);
+
+        if (!screenTexture[s]) {
+            PrintLog(PRINT_NORMAL, "ERROR: failed to create screen buffer!\nerror msg: %s", SDL_GetError());
+            return 0;
+        }
+    }
+    imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, RETRO_VIDEO_TEXTURE_W, RETRO_VIDEO_TEXTURE_H);
+    SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_LINEAR);
+    if (!imageTexture)
+        return false;
+    SDL_SetTextureScaleMode(imageTexture, SDL_SCALEMODE_NEAREST);
+
+    lastShaderID = -1;
+    InitVertexBuffer();
+    engine.inFocus          = 1;
+    videoSettings.viewportX = 0;
+    videoSettings.viewportY = 0;
+    videoSettings.viewportW = 1.0 / viewSize.x;
+    videoSettings.viewportH = 1.0 / viewSize.y;
+
+    return true;
+}
+
+void RenderDevice::LoadShader(const char *fileName, bool32 linear)
+{
+#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+    if (!gpuDevice || gpuShaderFormat == SDL_GPU_SHADERFORMAT_INVALID || shaderCount == SHADER_COUNT)
+        return;
+
+    for (int32 i = 0; i < shaderCount; ++i) {
+        if (strcmp(shaderList[i].name, fileName) == 0)
+            return;
+    }
+
+    const char *folder = nullptr;
+    if (gpuShaderFormat == SDL_GPU_SHADERFORMAT_SPIRV)
+        folder = "SPIRV";
+    else if (gpuShaderFormat == SDL_GPU_SHADERFORMAT_DXIL)
+        folder = "DXIL";
+    else if (gpuShaderFormat == SDL_GPU_SHADERFORMAT_MSL)
+        folder = "MSL";
+
+    char fullFilePath[0x100];
+    sprintf_s(fullFilePath, sizeof(fullFilePath), "Data/Shaders/CSO-SDL3/%s/%s.frag", folder, fileName);
+
+    FileInfo info;
+    InitFileInfo(&info);
+    if (!LoadFile(&info, fullFilePath, FMODE_RB)) {
+        PrintLog(PRINT_NORMAL, "[SDL3] Missing shader %s", fullFilePath);
+        return;
+    }
+
+    uint8 *fileData = NULL;
+    AllocateStorage((void **)&fileData, info.fileSize + 1, DATASET_TMP, false);
+    ReadBytes(&info, fileData, info.fileSize);
+    fileData[info.fileSize] = 0;
+    CloseFile(&info);
+
+    SDL_GPUShaderCreateInfo createInfo = {};
+    createInfo.code_size = info.fileSize;
+    createInfo.code = fileData;
+    createInfo.entrypoint = "main";
+    createInfo.format = gpuShaderFormat;
+    createInfo.stage = SDL_GPU_SHADERSTAGE_FRAGMENT;
+    createInfo.num_samplers = 1;
+    createInfo.num_uniform_buffers = 1;
+    SDL_GPUShader *fragmentShader = SDL_CreateGPUShader(gpuDevice, &createInfo);
+    RemoveStorageEntry((void **)&fileData);
+    if (!fragmentShader) {
+        PrintLog(PRINT_NORMAL, "[SDL3] Failed to create shader %s: %s", fileName, SDL_GetError());
+        return;
+    }
+
+    SDL_GPURenderStateCreateInfo stateInfo = {};
+    stateInfo.fragment_shader = fragmentShader;
+    SDL_GPURenderState *renderState = SDL_CreateGPURenderState(renderer, &stateInfo);
+    if (!renderState) {
+        PrintLog(PRINT_NORMAL, "[SDL3] Failed to create render state for %s: %s", fileName, SDL_GetError());
+        return;
+    }
+
+    ShaderEntry *shader = &shaderList[shaderCount++];
+    shader->linear = linear;
+    shader->renderState = renderState;
+    sprintf_s(shader->name, sizeof(shader->name), "%s", fileName);
+#else
+    PrintLog(PRINT_NORMAL, "This render device does not support shaders!");
+#endif
+}
+
+bool RenderDevice::InitShaders()
+{
+#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+    videoSettings.shaderSupport = true;
+    if (!gpuDevice || gpuShaderFormat == SDL_GPU_SHADERFORMAT_INVALID) {
+        videoSettings.shaderSupport = false;
+    }
+#endif
+    int32 maxShaders = 0;
+#if RETRO_USE_MOD_LOADER
+    shaderCount = 0;
+#endif
+
+    if (videoSettings.shaderSupport) {
+        LoadShader("None", false);
+        LoadShader("Clean", true);
+        LoadShader("CRT-Yeetron", true);
+        LoadShader("CRT-Yee64", true);
+
+#if RETRO_USE_MOD_LOADER
+        // a place for mods to load custom shaders
+        RunModCallbacks(MODCB_ONSHADERLOAD, NULL);
+        userShaderCount = shaderCount;
+#endif
+
+        LoadShader("YUV-420", true);
+        LoadShader("YUV-422", true);
+        LoadShader("YUV-444", true);
+        LoadShader("RGB-Image", true);
+        maxShaders = shaderCount;
+    }
+    if (!maxShaders) {
+        PrintLog(PRINT_NORMAL, "[SDL3] No precompiled shaders loaded; using fixed-function fallback");
+        videoSettings.shaderSupport = false;
+        shaderCount = 1;
+        shaderList[0].linear = videoSettings.windowed ? false : true;
+        sprintf_s(shaderList[0].name, sizeof(shaderList[0].name), "%s", "None");
+        maxShaders = 1;
+    }
+    else if (!videoSettings.shaderSupport) {
+        for (int32 s = 0; s < SHADER_COUNT; ++s) shaderList[s].linear = true;
+
+        shaderList[0].linear = videoSettings.windowed ? false : shaderList[0].linear;
+        maxShaders           = 1;
+        shaderCount          = 1;
+    }
+
+    videoSettings.shaderID = videoSettings.shaderID >= maxShaders ? 0 : videoSettings.shaderID;
+
+    return true;
+}
+
+bool RenderDevice::SetupRendering()
+{
+#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+    gpuDevice = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_DXIL | SDL_GPU_SHADERFORMAT_MSL, false, nullptr);
+    if (gpuDevice) {
+        renderer = SDL_CreateGPURenderer(gpuDevice, window);
+        if (renderer) {
+            SDL_GPUShaderFormat formats = SDL_GetGPUShaderFormats(gpuDevice);
+            if (formats & SDL_GPU_SHADERFORMAT_SPIRV)
+                gpuShaderFormat = SDL_GPU_SHADERFORMAT_SPIRV;
+            else if (formats & SDL_GPU_SHADERFORMAT_DXIL)
+                gpuShaderFormat = SDL_GPU_SHADERFORMAT_DXIL;
+            else if (formats & SDL_GPU_SHADERFORMAT_MSL)
+                gpuShaderFormat = SDL_GPU_SHADERFORMAT_MSL;
+            else
+                gpuShaderFormat = SDL_GPU_SHADERFORMAT_INVALID;
+        }
+        else {
+            SDL_DestroyGPUDevice(gpuDevice);
+            gpuDevice = nullptr;
+        }
+    }
+#endif
+    if (!renderer)
+        renderer = SDL_CreateRenderer(window, NULL);
+
+    if (!renderer) {
+        PrintLog(PRINT_NORMAL, "ERROR: failed to create renderer!");
+        return false;
+    }
+
+    GetDisplays();
+
+    if (!InitGraphicsAPI() || !InitShaders())
+        return false;
+
+    int32 size = videoSettings.pixWidth >= SCREEN_YSIZE ? videoSettings.pixWidth : SCREEN_YSIZE;
+    scanlines  = (ScanlineInfo *)malloc(size * sizeof(ScanlineInfo));
+    memset(scanlines, 0, size * sizeof(ScanlineInfo));
+
+    videoSettings.windowState = WINDOWSTATE_ACTIVE;
+    videoSettings.dimMax      = 1.0;
+    videoSettings.dimPercent  = 1.0;
+
+    return true;
+}
+
+void RenderDevice::GetDisplays()
+{
+    SDL_DisplayID currentWindowDisplay = SDL_GetDisplayForWindow(window);
+
+    int32 dispCount;
+    SDL_GetDisplays(&dispCount);
+
+    const SDL_DisplayMode *currentDisplay = SDL_GetCurrentDisplayMode(currentWindowDisplay);
+
+    displayModeIndex = 0;
+    for (int32 a = 0; a < dispCount; ++a) {
+        const SDL_DisplayMode *displayMode = SDL_GetCurrentDisplayMode(currentWindowDisplay);
+
+        displayWidth[a]  = displayMode->w;
+        displayHeight[a] = displayMode->h;
+
+        if (memcmp(&currentDisplay, &displayMode, sizeof(SDL_DisplayMode*)) == 0) {
+            displayModeIndex = a;
+        }
+    }
+
+    SDL_DisplayMode **modes = SDL_GetFullscreenDisplayModes(currentWindowDisplay, &displayCount);
+    if (displayInfo.displays)
+        free(displayInfo.displays);
+
+    displayInfo.displays          = (decltype(displayInfo.displays))malloc(sizeof(SDL_DisplayMode) * displayCount);
+    int32 newDisplayCount         = 0;
+    bool32 foundFullScreenDisplay = false;
+
+    for (int32 d = displayCount - 1; d >= 0; --d) {
+        // SDL_GetDisplayMode(currentWindowDisplay, d, &displayInfo.displays[newDisplayCount].internal);
+        displayInfo.displays[newDisplayCount].internal = *modes[d];
+
+        int32 refreshRate = displayInfo.displays[newDisplayCount].refresh_rate;
+        if (refreshRate >= 59 && (refreshRate <= 60 || refreshRate >= 120) && displayInfo.displays[newDisplayCount].height >= (SCREEN_YSIZE * 2)) {
+            if (newDisplayCount != 0 && refreshRate == 60 && displayInfo.displays[newDisplayCount - 1].refresh_rate == 59) {
+                memcpy(&displayInfo.displays[newDisplayCount - 1], &displayInfo.displays[newDisplayCount], sizeof(displayInfo.displays[0]));
+                --newDisplayCount;
+            }
+
+            if (videoSettings.fsWidth == displayInfo.displays[newDisplayCount].width
+                && videoSettings.fsHeight == displayInfo.displays[newDisplayCount].height)
+                foundFullScreenDisplay = true;
+
+            ++newDisplayCount;
+        }
+    }
+
+    displayCount = newDisplayCount;
+    if (!foundFullScreenDisplay) {
+        videoSettings.fsWidth     = 0;
+        videoSettings.fsHeight    = 0;
+        videoSettings.refreshRate = 60; // 0;
+    }
+}
+
+void RenderDevice::GetWindowSize(int32 *width, int32 *height)
+{
+    if (!videoSettings.windowed) {
+        SDL_GetCurrentRenderOutputSize(renderer, width, height);
+    }
+    else {
+        SDL_DisplayID currentWindowDisplay = SDL_GetDisplayForWindow(window);
+
+        const SDL_DisplayMode *display = SDL_GetCurrentDisplayMode(currentWindowDisplay);
+
+        if (width)
+            *width = display->w;
+
+        if (height)
+            *height = display->h;
+    }
+}
+
+void RenderDevice::ProcessEvent(SDL_Event event)
+{
+    switch (event.type) {
+        case SDL_ADDEVENT:
+            switch (event.window.type) {
+                case SDL_EVENT_WINDOW_MAXIMIZED: {
+                    SDL_RestoreWindow(window);
+                    SDL_SetWindowFullscreen(window, true);
+                    SDL_HideCursor();
+                    videoSettings.windowed = false;
+                    break;
+                }
+
+                case SDL_EVENT_WINDOW_CLOSE_REQUESTED: isRunning = false; break;
+
+                case SDL_EVENT_WINDOW_FOCUS_GAINED:
+#if RETRO_REV02
+                    SKU::userCore->focusState = 0;
+#endif
+                    break;
+
+                case SDL_EVENT_WINDOW_FOCUS_LOST:
+#if RETRO_REV02
+                    SKU::userCore->focusState = 1;
+#endif
+                    break;
+                default: break;
+            }
+            break;
+
+        case SDL_EVENT_GAMEPAD_ADDED: {
+            SDL_Gamepad *game_controller = SDL_OpenGamepad(event.cdevice.which);
+
+            if (game_controller != NULL) {
+                uint32 id;
+                char idBuffer[0x20];
+                sprintf_s(idBuffer, sizeof(idBuffer), "SDLDevice%d", SDL_GetJoystickID(SDL_GetGamepadJoystick(game_controller)));
+                GenerateHashCRC(&id, idBuffer);
+
+                if (SKU::InitSDL3InputDevice(id, game_controller) == NULL)
+                    SDL_CloseGamepad(game_controller);
+            }
+
+            break;
+        }
+
+        case SDL_EVENT_GAMEPAD_REMOVED: {
+            uint32 id;
+            char idBuffer[0x20];
+            sprintf_s(idBuffer, sizeof(idBuffer), "SDLDevice%d", event.cdevice.which);
+            GenerateHashCRC(&id, idBuffer);
+
+            RemoveInputDevice(InputDeviceFromID(id));
+            break;
+        }
+
+        case SDL_EVENT_WILL_ENTER_FOREGROUND:
+#if RETRO_REV02
+            SKU::userCore->focusState = 0;
+#endif
+            break;
+
+        case SDL_EVENT_WILL_ENTER_BACKGROUND:
+#if RETRO_REV02
+            SKU::userCore->focusState = 1;
+#endif
+            break;
+
+        case SDL_EVENT_TERMINATING: isRunning = false; break;
+
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+            switch (event.button.button) {
+                case SDL_BUTTON_LEFT: touchInfo.down[0] = true; touchInfo.count = 1;
+#if !RETRO_REV02
+                    RSDK::SKU::buttonDownCount++;
+#endif
+                    break;
+
+                case SDL_BUTTON_RIGHT:
+#if !RETRO_REV02 && RETRO_INPUTDEVICE_KEYBOARD
+                    RSDK::SKU::specialKeyStates[3] = true;
+                    RSDK::SKU::buttonDownCount++;
+#endif
+                    break;
+            }
+            break;
+
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+            switch (event.button.button) {
+                case SDL_BUTTON_LEFT: touchInfo.down[0] = false; touchInfo.count = 0;
+#if !RETRO_REV02
+                    RSDK::SKU::buttonDownCount--;
+#endif
+                    break;
+
+                case SDL_BUTTON_RIGHT:
+#if !RETRO_REV02 && RETRO_INPUTDEVICE_KEYBOARD
+                    RSDK::SKU::specialKeyStates[3] = false;
+                    RSDK::SKU::buttonDownCount--;
+#endif
+                    break;
+            }
+            break;
+
+        case SDL_EVENT_FINGER_MOTION:
+        case SDL_EVENT_FINGER_DOWN:
+        case SDL_EVENT_FINGER_UP: {
+            int32 count;
+            SDL_Finger **fingers = SDL_GetTouchFingers(event.tfinger.touchID, &count);
+            touchInfo.count = 0;
+            for (int32 i = 0; i < count; i++) {
+                SDL_Finger *finger = fingers[i];
+                if (finger) {
+                    touchInfo.down[touchInfo.count] = true;
+                    touchInfo.x[touchInfo.count]    = finger->x;
+                    touchInfo.y[touchInfo.count]    = finger->y;
+                    touchInfo.count++;
+                }
+            }
+            break;
+        }
+
+        case SDL_EVENT_KEY_DOWN:
+#if !RETRO_REV02
+            ++RSDK::SKU::buttonDownCount;
+#endif
+            switch (event.key.scancode) {
+                case SDL_SCANCODE_RETURN:
+                    if (event.key.mod & SDL_KMOD_LALT) {
+                        videoSettings.windowed ^= 1;
+                        UpdateGameWindow();
+                        changedVideoSettings = false;
+                        break;
+                    }
+
+#if !RETRO_REV02 && RETRO_INPUTDEVICE_KEYBOARD
+                    RSDK::SKU::specialKeyStates[1] = true;
+#endif
+                    // [fallthrough]
+
+                default:
+#if RETRO_INPUTDEVICE_KEYBOARD
+                    SKU::UpdateKeyState(event.key.scancode);
+#endif
+                    break;
+
+                case SDL_SCANCODE_ESCAPE:
+                    if (engine.devMenu) {
+#if RETRO_REV0U
+                        if (sceneInfo.state == ENGINESTATE_DEVMENU || RSDK::Legacy::gameMode == RSDK::Legacy::ENGINE_DEVMENU)
+#else
+                        if (sceneInfo.state == ENGINESTATE_DEVMENU)
+#endif
+                            CloseDevMenu();
+                        else
+                            OpenDevMenu();
+                    }
+                    else {
+#if RETRO_INPUTDEVICE_KEYBOARD
+                        SKU::UpdateKeyState(event.key.scancode);
+#endif
+                    }
+
+#if !RETRO_REV02 && RETRO_INPUTDEVICE_KEYBOARD
+                    RSDK::SKU::specialKeyStates[0] = true;
+#endif
+                    break;
+
+#if !RETRO_USE_ORIGINAL_CODE
+                case SDL_SCANCODE_F1:
+                    if (engine.devMenu) {
+                        sceneInfo.listPos--;
+                        while (sceneInfo.listPos < sceneInfo.listCategory[sceneInfo.activeCategory].sceneOffsetStart
+                            || sceneInfo.listPos > sceneInfo.listCategory[sceneInfo.activeCategory].sceneOffsetEnd
+                            || !sceneInfo.listCategory[sceneInfo.activeCategory].sceneCount) {
+                            sceneInfo.activeCategory--;
+                            if (sceneInfo.activeCategory >= sceneInfo.categoryCount) {
+                                sceneInfo.activeCategory = sceneInfo.categoryCount - 1;
+                            }
+                            sceneInfo.listPos = sceneInfo.listCategory[sceneInfo.activeCategory].sceneOffsetEnd - 1;
+                        }
+
+#if RETRO_REV0U
+                        switch (engine.version) {
+                            default: break;
+                            case 5: LoadScene(); break;
+                            case 4:
+                            case 3: RSDK::Legacy::stageMode = RSDK::Legacy::STAGEMODE_LOAD; break;
+                        }
+#else
+                        LoadScene();
+#endif
+                    }
+                    break;
+
+                case SDL_SCANCODE_F2:
+                    if (engine.devMenu) {
+                        sceneInfo.listPos++;
+                        while (sceneInfo.listPos < sceneInfo.listCategory[sceneInfo.activeCategory].sceneOffsetStart
+                            || sceneInfo.listPos > sceneInfo.listCategory[sceneInfo.activeCategory].sceneOffsetEnd
+                            || !sceneInfo.listCategory[sceneInfo.activeCategory].sceneCount) {
+                            sceneInfo.activeCategory++;
+                            if (sceneInfo.activeCategory >= sceneInfo.categoryCount) {
+                                sceneInfo.activeCategory = 0;
+                            }
+                            sceneInfo.listPos = sceneInfo.listCategory[sceneInfo.activeCategory].sceneOffsetStart;
+                        }
+
+#if RETRO_REV0U
+                        switch (engine.version) {
+                            default: break;
+                            case 5: LoadScene(); break;
+                            case 4:
+                            case 3: RSDK::Legacy::stageMode = RSDK::Legacy::STAGEMODE_LOAD; break;
+                        }
+#else
+                        LoadScene();
+#endif
+                    }
+                    break;
+#endif
+
+                case SDL_SCANCODE_F3:
+                    if (userShaderCount)
+                        videoSettings.shaderID = (videoSettings.shaderID + 1) % userShaderCount;
+                    break;
+
+#if !RETRO_USE_ORIGINAL_CODE
+                case SDL_SCANCODE_F4:
+                    if (engine.devMenu)
+                        engine.showEntityInfo ^= 1;
+                    break;
+
+                case SDL_SCANCODE_F5:
+                    if (engine.devMenu) {
+                        // Quick-Reload
+#if RETRO_USE_MOD_LOADER
+                        if (event.key.mod & SDL_KMOD_LCTRL)
+                            RefreshModFolders();
+#endif
+
+#if RETRO_REV0U
+                        switch (engine.version) {
+                            default: break;
+                            case 5: LoadScene(); break;
+                            case 4:
+                            case 3: RSDK::Legacy::stageMode = RSDK::Legacy::STAGEMODE_LOAD; break;
+                        }
+#else
+                        LoadScene();
+#endif
+                    }
+                    break;
+
+                case SDL_SCANCODE_F6:
+                    if (engine.devMenu && videoSettings.screenCount > 1)
+                        videoSettings.screenCount--;
+                    break;
+
+                case SDL_SCANCODE_F7:
+                    if (engine.devMenu && videoSettings.screenCount < SCREEN_COUNT)
+                        videoSettings.screenCount++;
+                    break;
+
+                case SDL_SCANCODE_F8:
+                    if (engine.devMenu)
+                        engine.showUpdateRanges ^= 1;
+                    break;
+
+                case SDL_SCANCODE_F9:
+                    if (engine.devMenu)
+                        showHitboxes ^= 1;
+                    break;
+
+                case SDL_SCANCODE_F10:
+                    if (engine.devMenu)
+                        engine.showPaletteOverlay ^= 1;
+                    break;
+#endif
+                case SDL_SCANCODE_BACKSPACE:
+                    if (engine.devMenu)
+                        engine.gameSpeed = engine.fastForwardSpeed;
+                    break;
+
+                case SDL_SCANCODE_F11:
+                case SDL_SCANCODE_INSERT:
+                    if (engine.devMenu)
+                        engine.frameStep = true;
+                    break;
+
+                case SDL_SCANCODE_F12:
+                case SDL_SCANCODE_PAUSE:
+                    if (engine.devMenu) {
+#if RETRO_REV0U
+                        switch (engine.version) {
+                            default: break;
+                            case 5:
+                                if (sceneInfo.state != ENGINESTATE_NONE)
+                                    sceneInfo.state ^= ENGINESTATE_STEPOVER;
+                                break;
+                            case 4:
+                            case 3:
+                                if (RSDK::Legacy::stageMode != ENGINESTATE_NONE)
+                                    RSDK::Legacy::stageMode ^= RSDK::Legacy::STAGEMODE_STEPOVER;
+                                break;
+                        }
+#else
+                        if (sceneInfo.state != ENGINESTATE_NONE)
+                            sceneInfo.state ^= ENGINESTATE_STEPOVER;
+#endif
+                    }
+                    break;
+            }
+            break;
+
+        case SDL_EVENT_KEY_UP:
+#if !RETRO_REV02
+            --RSDK::SKU::buttonDownCount;
+#endif
+            switch (event.key.scancode) {
+                default:
+#if RETRO_INPUTDEVICE_KEYBOARD
+                    SKU::ClearKeyState(event.key.scancode);
+#endif
+                    break;
+
+#if !RETRO_REV02 && RETRO_INPUTDEVICE_KEYBOARD
+                case SDL_SCANCODE_ESCAPE:
+                    RSDK::SKU::specialKeyStates[0] = false;
+                    SKU::ClearKeyState(event.key.keysym.scancode);
+                    break;
+
+                case SDL_SCANCODE_RETURN:
+                    RSDK::SKU::specialKeyStates[1] = false;
+                    SKU::ClearKeyState(event.key.keysym.scancode);
+                    break;
+#endif
+                case SDL_SCANCODE_BACKSPACE: engine.gameSpeed = 1; break;
+            }
+            break;
+
+        case SDL_EVENT_QUIT: isRunning = false; break;
+    }
+}
+
+bool RenderDevice::ProcessEvents()
+{
+    SDL_Event sdlEvent;
+
+    while (SDL_PollEvent(&sdlEvent)) {
+        ProcessEvent(sdlEvent);
+
+        if (!isRunning)
+            return false;
+    }
+
+    return isRunning;
+}
+
+void RenderDevice::SetupImageTexture(int32 width, int32 height, uint8 *imagePixels)
+{
+    if (lastTextureFormat != SHADER_RGB_IMAGE)
+        lastTextureFormat = SHADER_RGB_IMAGE;
+
+    int32 texPitch = 0;
+    uint32 *pixels = NULL;
+    SDL_LockTexture(imageTexture, NULL, (void **)&pixels, &texPitch);
+
+    int32 pitch           = (texPitch >> 2) - width;
+    uint32 *imagePixels32 = (uint32 *)imagePixels;
+    for (int32 y = 0; y < height; ++y) {
+        for (int32 x = 0; x < width; ++x) {
+            *pixels++ = *imagePixels32++;
+        }
+
+        pixels += pitch;
+    }
+
+    SDL_UnlockTexture(imageTexture);
+}
+
+void RenderDevice::SetupVideoTexture_YUV420(int32 width, int32 height, uint8 *yPlane, uint8 *uPlane, uint8 *vPlane, int32 strideY, int32 strideU,
+                                            int32 strideV)
+{
+#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+    if (lastTextureFormat != SHADER_YUV_420)
+        lastTextureFormat = SHADER_YUV_420;
+
+    int32 texPitch = 0;
+    uint32 *pixels = NULL;
+    SDL_LockTexture(imageTexture, NULL, (void **)&pixels, &texPitch);
+
+    uint32 *preY = pixels;
+    int32 pitch = (texPitch >> 2) - width;
+    if (videoSettings.shaderSupport) {
+        for (int32 y = 0; y < height; ++y) {
+            for (int32 x = 0; x < width; ++x) {
+                *pixels++ = (yPlane[x] << 16) | 0xFF000000;
+            }
+
+            pixels += pitch;
+            yPlane += strideY;
+        }
+
+        pixels = preY;
+        pitch  = (texPitch >> 2) - (width >> 1);
+        for (int32 y = 0; y < (height >> 1); ++y) {
+            for (int32 x = 0; x < (width >> 1); ++x) {
+                *pixels++ |= (vPlane[x] << 0) | (uPlane[x] << 8) | 0xFF000000;
+            }
+
+            pixels += pitch;
+            uPlane += strideU;
+            vPlane += strideV;
+        }
+    }
+    else {
+        // No shader support means no YUV support! at least use the brightness to show it in grayscale!
+        for (int32 y = 0; y < height; ++y) {
+            for (int32 x = 0; x < width; ++x) {
+                int32 brightness = yPlane[x];
+                *pixels++        = (brightness << 0) | (brightness << 8) | (brightness << 16) | 0xFF000000;
+            }
+
+            pixels += pitch;
+            yPlane += strideY;
+        }
+    }
+
+    SDL_UnlockTexture(imageTexture);
+#else
+    if (lastTextureFormat != SHADER_YUV_420) {
+        if (imageTexture)
+            SDL_DestroyTexture(imageTexture);
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+        imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_YV12, SDL_TEXTUREACCESS_STREAMING, width, height);
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+        lastTextureFormat = SHADER_YUV_420;
+    }
+    SDL_UpdateYUVTexture(imageTexture, NULL, yPlane, strideY, uPlane, strideU, vPlane, strideV);
+#endif
+}
+void RenderDevice::SetupVideoTexture_YUV422(int32 width, int32 height, uint8 *yPlane, uint8 *uPlane, uint8 *vPlane, int32 strideY, int32 strideU,
+                                            int32 strideV)
+{
+#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+    if (lastTextureFormat != SHADER_YUV_422)
+        lastTextureFormat = SHADER_YUV_422;
+
+    int32 texPitch = 0;
+    uint32 *pixels = NULL;
+    SDL_LockTexture(imageTexture, NULL, (void **)&pixels, &texPitch);
+
+    uint32 *preY = pixels;
+    int32 pitch = (texPitch >> 2) - width;
+    if (videoSettings.shaderSupport) {
+        for (int32 y = 0; y < height; ++y) {
+            for (int32 x = 0; x < width; ++x) {
+                *pixels++ = (yPlane[x] << 16) | 0xFF000000;
+            }
+
+            pixels += pitch;
+            yPlane += strideY;
+        }
+
+        pixels = preY;
+        pitch  = (texPitch >> 2) - (width >> 1);
+        for (int32 y = 0; y < (height >> 1); ++y) {
+            for (int32 x = 0; x < (width >> 1); ++x) {
+                *pixels++ |= (vPlane[x] << 0) | (uPlane[x] << 8) | 0xFF000000;
+            }
+
+            pixels += pitch;
+            uPlane += strideU;
+            vPlane += strideV;
+        }
+    }
+    else {
+        // No shader support means no YUV support! at least use the brightness to show it in grayscale!
+        for (int32 y = 0; y < height; ++y) {
+            for (int32 x = 0; x < width; ++x) {
+                int32 brightness = yPlane[x];
+                *pixels++        = (brightness << 0) | (brightness << 8) | (brightness << 16) | 0xFF000000;
+            }
+
+            pixels += pitch;
+            yPlane += strideY;
+        }
+    }
+
+    SDL_UnlockTexture(imageTexture);
+#else
+    if (lastTextureFormat != SHADER_YUV_422) {
+        if (imageTexture)
+            SDL_DestroyTexture(imageTexture);
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+        imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_YV12, SDL_TEXTUREACCESS_STREAMING, width, height);
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+        lastTextureFormat = SHADER_YUV_422;
+    }
+    SDL_UpdateYUVTexture(imageTexture, NULL, yPlane, strideY, uPlane, strideU, vPlane, strideV);
+#endif
+}
+void RenderDevice::SetupVideoTexture_YUV444(int32 width, int32 height, uint8 *yPlane, uint8 *uPlane, uint8 *vPlane, int32 strideY, int32 strideU,
+                                            int32 strideV)
+{
+#if (SDL_VERSION >= SDL_VERSIONNUM(3, 4, 0))
+    if (lastTextureFormat != SHADER_YUV_444)
+        lastTextureFormat = SHADER_YUV_444;
+
+    int32 texPitch = 0;
+    uint32 *pixels = NULL;
+    SDL_LockTexture(imageTexture, NULL, (void **)&pixels, &texPitch);
+
+    uint32 *preY = pixels;
+    int32 pitch = (texPitch >> 2) - width;
+    if (videoSettings.shaderSupport) {
+        for (int32 y = 0; y < height; ++y) {
+            for (int32 x = 0; x < width; ++x) {
+                *pixels++ = (yPlane[x] << 16) | 0xFF000000;
+            }
+
+            pixels += pitch;
+            yPlane += strideY;
+        }
+
+        pixels = preY;
+        pitch  = (texPitch >> 2) - (width >> 1);
+        for (int32 y = 0; y < (height >> 1); ++y) {
+            for (int32 x = 0; x < (width >> 1); ++x) {
+                *pixels++ |= (vPlane[x] << 0) | (uPlane[x] << 8) | 0xFF000000;
+            }
+
+            pixels += pitch;
+            uPlane += strideU;
+            vPlane += strideV;
+        }
+    }
+    else {
+        // No shader support means no YUV support! at least use the brightness to show it in grayscale!
+        for (int32 y = 0; y < height; ++y) {
+            for (int32 x = 0; x < width; ++x) {
+                int32 brightness = yPlane[x];
+                *pixels++        = (brightness << 0) | (brightness << 8) | (brightness << 16) | 0xFF000000;
+            }
+
+            pixels += pitch;
+            yPlane += strideY;
+        }
+    }
+
+    SDL_UnlockTexture(imageTexture);
+#else
+    if (lastTextureFormat != SHADER_YUV_444) {
+        if (imageTexture)
+            SDL_DestroyTexture(imageTexture);
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+        imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_YV12, SDL_TEXTUREACCESS_STREAMING, width, height);
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+        lastTextureFormat = SHADER_YUV_444;
+    }
+    SDL_UpdateYUVTexture(imageTexture, NULL, yPlane, strideY, uPlane, strideU, vPlane, strideV);
+#endif
+}

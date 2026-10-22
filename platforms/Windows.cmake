@@ -97,12 +97,18 @@ elseif(RETRO_SUBSYSTEM STREQUAL "VK")
     )
 elseif(RETRO_SUBSYSTEM STREQUAL "SDL2")
     find_package(SDL2 CONFIG REQUIRED) # i ain't setting this up all the way
-    target_link_libraries(RetroEngine 
+    target_link_libraries(RetroEngine
         $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
         $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
     )
+elseif(RETRO_SUBSYSTEM STREQUAL "SDL3")
+    find_package(SDL3 CONFIG REQUIRED) # i ain't setting this up all the way
+    target_link_libraries(RetroEngine
+        $<TARGET_NAME_IF_EXISTS:SDL3::SDL3main>
+        $<IF:$<TARGET_EXISTS:SDL3::SDL3>,SDL3::SDL3,SDL3::SDL3-static>
+    )
 else()
-    message(FATAL_ERROR "RETRO_SUBSYSTEM must be one of DX9, DX11, OGL, VK, or SDL2")
+    message(FATAL_ERROR "RETRO_SUBSYSTEM must be one of DX9, DX11, OGL, VK, SDL2, or SDL3")
 endif()
 
 if(USE_MINIAUDIO)
@@ -121,5 +127,5 @@ target_link_libraries(RetroEngine
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(RetroEngine PRIVATE -Wno-microsoft-cast -Wno-microsoft-exception-spec)
 endif()
-    
+
 target_sources(RetroEngine PRIVATE ${RETRO_NAME}/${RETRO_NAME}.rc)

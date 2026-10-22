@@ -2,7 +2,7 @@
 namespace SKU
 {
 
-struct InputDeviceSDL : InputDevice {
+struct InputDeviceSDL2 : InputDevice {
     void UpdateInput();
     void ProcessInput(int32 controllerID);
     void CloseDevice();
@@ -38,7 +38,7 @@ struct InputDeviceSDL : InputDevice {
     bool32 swapABXY;
 };
 
-InputDeviceSDL *InitSDL2InputDevice(uint32 id, SDL_GameController *game_controller);
+InputDeviceSDL2 *InitSDL2InputDevice(uint32 id, SDL_GameController *game_controller);
 
 void InitSDL2InputAPI();
 void ReleaseSDL2InputAPI();

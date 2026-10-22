@@ -164,6 +164,7 @@ enum GameRegions {
 #define RETRO_RENDERDEVICE_DIRECTX11 (0)
 // CUSTOM
 #define RETRO_RENDERDEVICE_SDL2 (0)
+#define RETRO_RENDERDEVICE_SDL3 (0)
 #define RETRO_RENDERDEVICE_GLFW (0)
 #define RETRO_RENDERDEVICE_VK   (0)
 #define RETRO_RENDERDEVICE_EGL  (0)
@@ -175,6 +176,9 @@ enum GameRegions {
 // CUSTOM
 #ifndef RETRO_AUDIODEVICE_SDL2
 #define RETRO_AUDIODEVICE_SDL2 (0)
+#endif
+#ifndef RETRO_AUDIODEVICE_SDL3
+#define RETRO_AUDIODEVICE_SDL3 (0)
 #endif
 #define RETRO_AUDIODEVICE_OBOE (0)
 #ifndef RETRO_AUDIODEVICE_PORT
@@ -266,6 +270,13 @@ enum GameRegions {
 #undef RETRO_INPUTDEVICE_SDL2
 #define RETRO_INPUTDEVICE_SDL2 (1)
 
+#elif defined(RSDK_USE_SDL3)
+#undef RETRO_RENDERDEVICE_SDL3
+#define RETRO_RENDERDEVICE_SDL3 (1)
+
+#undef RETRO_INPUTDEVICE_SDL3
+#define RETRO_INPUTDEVICE_SDL3 (1)
+
 #elif defined(RSDK_USE_DX9)
 #undef RETRO_RENDERDEVICE_DIRECTX9
 #define RETRO_RENDERDEVICE_DIRECTX9 (1)
@@ -303,7 +314,7 @@ enum GameRegions {
 #endif
 
 #else
-#error One of RSDK_USE_DX9, RSDK_USE_DX11, RSDK_USE_SDL2, or RSDK_USE_OGL must be defined.
+#error One of RSDK_USE_DX9, RSDK_USE_DX11, RSDK_USE_SDL2, RSDK_USE_SDL3, or RSDK_USE_OGL must be defined.
 #endif
 
 #if !RETRO_AUDIODEVICE_MINI
@@ -345,6 +356,18 @@ enum GameRegions {
 #undef RETRO_AUDIODEVICE_SDL2
 #define RETRO_AUDIODEVICE_SDL2 (1)
 
+#elif defined(RSDK_USE_SDL3)
+
+#undef RETRO_RENDERDEVICE_SDL3
+#define RETRO_RENDERDEVICE_SDL3 (1)
+#undef RETRO_INPUTDEVICE_SDL3
+#define RETRO_INPUTDEVICE_SDL3 (1)
+
+#undef RETRO_AUDIODEVICE_MINI
+#define RETRO_AUDIODEVICE_MINI (0)
+#undef RETRO_AUDIODEVICE_SDL3
+#define RETRO_AUDIODEVICE_SDL3 (1)
+
 #elif defined(RSDK_USE_OGL)
 #undef RETRO_RENDERDEVICE_GLFW
 #define RETRO_RENDERDEVICE_GLFW (1)
@@ -361,7 +384,7 @@ enum GameRegions {
 #endif
 
 #else
-#error RSDK_USE_SDL2, RSDK_USE_OGL or RSDK_USE_VK must be defined.
+#error RSDK_USE_SDL2, RSDK_USE_SDL3, RSDK_USE_OGL or RSDK_USE_VK must be defined.
 #endif //! RSDK_USE_SDL2
 
 #elif RETRO_PLATFORM == RETRO_SWITCH
@@ -408,15 +431,45 @@ enum GameRegions {
 
 #elif RETRO_PLATFORM == RETRO_OSX || RETRO_PLATFORM == RETRO_iOS
 
+#if RSDK_USE_SDL2
+
 #undef RETRO_RENDERDEVICE_SDL2
 #define RETRO_RENDERDEVICE_SDL2 (1)
+#undef RETRO_INPUTDEVICE_SDL2
+#define RETRO_INPUTDEVICE_SDL2 (1)
 
 #undef RETRO_AUDIODEVICE_SDL2
 #define RETRO_AUDIODEVICE_SDL2 (1)
 
-#undef RETRO_INPUTDEVICE_SDL2
-#define RETRO_INPUTDEVICE_SDL2 (1)
+#elif defined(RSDK_USE_OGL)
+#undef RETRO_RENDERDEVICE_GLFW
+#define RETRO_RENDERDEVICE_GLFW (1)
+#undef RETRO_INPUTDEVICE_GLFW
+#define RETRO_INPUTDEVICE_GLFW (1)
 
+#elif defined(RSDK_USE_VK)
+#undef RETRO_RENDERDEVICE_VK
+#define RETRO_RENDERDEVICE_VK (1)
+
+#if defined(VULKAN_USE_GLFW)
+#undef RETRO_INPUTDEVICE_GLFW
+#define RETRO_INPUTDEVICE_GLFW (1)
+#endif
+
+#endif
+#elif RSDK_USE_SDL3
+
+#undef RETRO_RENDERDEVICE_SDL3
+#define RETRO_RENDERDEVICE_SDL3 (1)
+#undef RETRO_AUDIODEVICE_SDL3
+#define RETRO_AUDIODEVICE_SDL3 (1)
+
+#undef RETRO_INPUTDEVICE_SDL3
+#define RETRO_INPUTDEVICE_SDL3 (1)
+
+#else
+#error One of RSDK_USE_SDL2, RSDK_USE_OGL, RSDK_USE_VK, or RSDK_USE_SDL3 must be defined.
+#endif
 #endif
 
 #if RETRO_PLATFORM == RETRO_WIN || RETRO_PLATFORM == RETRO_UWP
@@ -473,9 +526,25 @@ enum GameRegions {
 #if RETRO_PLATFORM == RETRO_OSX
 
 #include "cocoaHelpers.hpp"
-#elif RETRO_PLATFORM == RETRO_iOS
 
-#include "cocoaHelpers.hpp"
+#if RETRO_AUDIODEVICE_MINI
+#define MA_NO_DECODING
+#define MA_NO_ENCODING
+#define MA_NO_RESOURCE_MANAGER
+#define MA_NO_ENGINE
+#include <miniaudio/miniaudio.h>
+#endif
+
+#if RETRO_RENDERDEVICE_GLFW
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#elif RETRO_RENDERDEVICE_VK
+#ifdef VULKAN_USE_GLFW
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+#endif
+#endif
+
 #elif RETRO_PLATFORM == RETRO_LINUX || RETRO_PLATFORM == RETRO_SWITCH
 
 #if RETRO_AUDIODEVICE_PORT
@@ -537,6 +606,8 @@ extern "C" {
 // https://wiki.libsdl.org/FAQDevelopment#do_i_include_sdl.h_or_sdlsdl.h
 #include "SDL.h"
 #endif
+#elif RETRO_RENDERDEVICE_SDL3 || RETRO_INPUTDEVICE_SDL3 || RETRO_AUDIODEVICE_SDL3
+#include <SDL3/SDL.h>
 #endif
 
 #include <theora/theoradec.h>
